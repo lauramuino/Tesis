@@ -1,7 +1,23 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <utility>
 #include "Graph.h"
+
+
+//////////////////FUNCIONES AUXILIARES
+
+bool esCaminable(char &c)
+{
+    return c == '1';
+}
+
+bool esRecurso (char &c)
+{
+    return c == '2';
+}
+
+//////////////////FUNCIONES AUXILIARES
 
 int main() {
 
@@ -12,6 +28,8 @@ int main() {
     //cargo el mapa en matriz temporal //todo: ver si puedo mejorar esto
     int row = 0, nodes = 0, col = 0;
     std::vector<std::vector<int> > map;
+    std::vector<std::pair<int, int> > recursos;
+
     if (mapFile.is_open()) {
         std::string line;
 
@@ -21,9 +39,14 @@ int main() {
             std::vector<int> empty(line.size(), 0);
             map.push_back(empty);
             for (char& c : line) {
-                if (c == 'O') {
+                if (esCaminable(c)) {
                     nodes++;
                     map[row][col] = nodes; //guardo el "numero" de nodo
+                } else if (esRecurso(c)) {
+                    nodes++;
+                    map[row][col] = nodes;
+                    //lo mismo pero los tengo en una lista para distinguirlos
+                    recursos.push_back(std::make_pair(row,col));
                 }
                 col++;
             }
@@ -31,9 +54,9 @@ int main() {
         }
         mapFile.close();
 
-//        std::cout << "cantidad de filas: " << row << std::endl;
-//        std::cout << "cantidad de columnas: " << col << std::endl;
-//        std::cout << "cantidad de nodos: " << nodes << std::endl;
+       std::cout << "cantidad de filas: " << row << std::endl;
+       std::cout << "cantidad de columnas: " << col << std::endl;
+       std::cout << "cantidad de nodos: " << nodes << std::endl;
 
     } else {
         std::cout << "Unable to open file";
@@ -55,7 +78,21 @@ int main() {
         }
     }
 
-    wakableTiles.showGraph();
+    // wakableTiles.showGraph();
+
+    //ahora tengo que hacer un corte
+    //usando la info de recursos puedo saber que #cortes = recursos -1 (porque quiero cada recurso en una cc)
+    //para eso, deberia procesar los mapas asociados a cada recurso
+    //para eso, tendria que ver de donde lo saca el frances... de manera temporal puedo usar los inputs que el ya tiene
+    // leer el paper entero again
+
+    std::vector<std::vector<int> > cc = wakableTiles.getConnectedComponents();
+
+    std::cout<< "hay " << cc.size() << " componentes conexas" << std::endl;
+
+    std::cout << cc[0].size() << std::endl;
+
+    std::cout << cc[41].size() << std::endl;
 
     return 0;
 }

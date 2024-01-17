@@ -1,11 +1,12 @@
 #include "Graph.h"
 #include <iostream>
-using namespace std;
+#include <set>
+#include <deque>
 
 
 Graph::Graph(int n) {
     numVertices = n;
-    adjMatrix = vector(n, vector(n,0)); //todo: check adjacency lists
+    adjMatrix = std::vector(n, std::vector(n,0)); //todo: check adjacency lists
 }
 
 Graph::~Graph() = default;
@@ -15,34 +16,39 @@ void Graph::addEdge(int v, int w) {
     adjMatrix[w][v] = 1;
 }
 
-void Graph::getConnectedComponents() {  //todo: check and adapt
-    // Mark all the vertices as not visited
-//    bool* visited = bool[V];
-//    for (int v = 0; v < numVertices; v++)
-//        visited[v] = false;
+std::vector<std::vector<int> > Graph::getConnectedComponents() {
+    std::set<int> visited;
+    std::vector<std::vector<int> > connectedComponents;
+    std::vector<int> cc;
+    connectedComponents.push_back(cc);
 
-//    for (int v = 0; v < numVertices; v++) {
-//        if (visited[v] == false) {
-//            // print all reachable vertices
-//            // from v
-//            DFSUtil(v, visited);
-//
-//            cout << "\n";
-//        }
-//    }
-} //todo: hacer que funcione
+   for (int v = 0; v < numVertices; v++) {
+        bool notVisited = visited.find(v) == visited.end();
+        if (notVisited) {
+            std::deque<int> toVisit;
+            toVisit.push_front(v);
+            cc.push_back(v);
 
-void Graph::DFSUtil(int v, bool visited[]) {  //todo: check and adapt
-    // Mark the current node as visited and print it
-    visited[v] = true;
-    cout << v << " ";
+            while(!toVisit.empty()) {
+                int actual = toVisit.back();
+                toVisit.pop_back();
+                visited.insert(actual);
+                //add their non visited neighbours
+                for (int j = 0; j<numVertices && j!=actual && this->adjMatrix[actual][j] && visited.find(j) == visited.end(); j++) {
+                    toVisit.push_front(j);
+                    cc.push_back(j);
+                }
+            }
 
-    // Recur for all the vertices
-    // adjacent to this vertex
-//    list<int>::iterator i;
-//    for (i = adjLists[v].begin(); i != adjLists[v].end(); ++i)
-//        if (!visited[*i])
-//            DFSUtil(*i, visited);
+            //if is not the end, add new cc
+            if (v < numVertices-1) {
+                std::vector<int> aux;
+                cc = aux;
+                connectedComponents.push_back(cc);
+            }
+        }
+   }
+   return connectedComponents;
 }
 
 void Graph::showGraph() { //todo: mejorar?

@@ -6,13 +6,12 @@
 class Graph {
     int numVertices;
     std::vector<std::vector<int> > adjMatrix;
-    void DFSUtil(int v, bool visited[]);
 
     public:
     explicit Graph(int n);
     ~Graph();
     void addEdge(int v, int w);
-    void getConnectedComponents();
+    std::vector<std::vector<int> > getConnectedComponents();
     void showGraph();
 
     int nodes() {
