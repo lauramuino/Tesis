@@ -19,36 +19,37 @@ void Graph::addEdge(int v, int w) {
 std::vector<std::vector<int> > Graph::getConnectedComponents() {
     std::set<int> visited;
     std::vector<std::vector<int> > connectedComponents;
-    std::vector<int> cc;
-    connectedComponents.push_back(cc);
 
    for (int v = 0; v < numVertices; v++) {
         bool notVisited = visited.find(v) == visited.end();
+
         if (notVisited) {
+            std::vector<int> cc;
             std::deque<int> toVisit;
             toVisit.push_front(v);
-            cc.push_back(v);
 
             while(!toVisit.empty()) {
                 int actual = toVisit.back();
                 toVisit.pop_back();
                 visited.insert(actual);
+                cc.push_back(v);
                 //add their non visited neighbours
-                for (int j = 0; j<numVertices && j!=actual && this->adjMatrix[actual][j] && visited.find(j) == visited.end(); j++) {
-                    toVisit.push_front(j);
-                    cc.push_back(j);
+                for (int j = 0; j < numVertices; j++) {
+                    if (neightbours(actual, j) && visited.find(j) == visited.end()) {
+                        toVisit.push_front(j);
+                    }
                 }
             }
 
-            //if is not the end, add new cc
-            if (v < numVertices-1) {
-                std::vector<int> aux;
-                cc = aux;
-                connectedComponents.push_back(cc);
-            }
+            //add new cc
+            connectedComponents.push_back(cc);
         }
    }
    return connectedComponents;
+}
+
+bool Graph::neightbours(int i, int j) {
+    return this->adjMatrix[i][j];
 }
 
 void Graph::showGraph() { //todo: mejorar?

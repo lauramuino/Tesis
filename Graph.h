@@ -6,6 +6,7 @@
 class Graph {
     int numVertices;
     std::vector<std::vector<int> > adjMatrix;
+    bool neightbours(int, int);
 
     public:
     explicit Graph(int n);

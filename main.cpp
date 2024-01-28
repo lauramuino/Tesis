@@ -17,7 +17,7 @@ bool esRecurso (char &c)
     return c == '2';
 }
 
-//////////////////FUNCIONES AUXILIARES
+//////////////////FIN FUNCIONES AUXILIARES
 
 int main() {
 
@@ -90,9 +90,13 @@ int main() {
 
     std::cout<< "hay " << cc.size() << " componentes conexas" << std::endl;
 
-    std::cout << cc[0].size() << std::endl;
-
-    std::cout << cc[41].size() << std::endl;
+     for (int i = 0; i < cc.size(); ++i) {
+        for (int j = 0; j < cc[i].size(); ++j) {
+            std::cout << cc[i][j];
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
 
     return 0;
 }
