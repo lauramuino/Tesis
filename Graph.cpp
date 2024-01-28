@@ -31,12 +31,15 @@ std::vector<std::vector<int> > Graph::getConnectedComponents() {
             while(!toVisit.empty()) {
                 int actual = toVisit.back();
                 toVisit.pop_back();
-                visited.insert(actual);
-                cc.push_back(v);
-                //add their non visited neighbours
-                for (int j = 0; j < numVertices; j++) {
-                    if (neightbours(actual, j) && visited.find(j) == visited.end()) {
-                        toVisit.push_front(j);
+                //if not already visited
+                if(visited.find(actual) == visited.end()) {
+                    visited.insert(actual);
+                    cc.push_back(actual);
+                    //add their non visited neighbours
+                    for (int j = 0; j < numVertices; j++) {
+                        if (neightbours(actual, j) && visited.find(j) == visited.end()) {
+                            toVisit.push_front(j);
+                        }
                     }
                 }
             }

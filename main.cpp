@@ -90,13 +90,5 @@ int main() {
 
     std::cout<< "hay " << cc.size() << " componentes conexas" << std::endl;
 
-     for (int i = 0; i < cc.size(); ++i) {
-        for (int j = 0; j < cc[i].size(); ++j) {
-            std::cout << cc[i][j];
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-
     return 0;
 }
