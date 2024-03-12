@@ -9,6 +9,7 @@
 
 bool esCaminable(char &c)
 {
+    // buildable or walkable, for now
     return c == '1';
 }
 
@@ -23,9 +24,9 @@ int main() {
 
     // abro mapa de input
     std::ifstream mapFile;
-    mapFile.open ("./maps/test1"); //todo: hardcodeado
+    mapFile.open ("./maps/test2"); //todo: hardcodeado
 
-    //cargo el mapa en matriz temporal //todo: ver si puedo mejorar esto
+    //cargo el mapa en matriz temporal
     int row = 0, nodes = 0, col = 0;
     std::vector<std::vector<int> > map;
     std::vector<std::pair<int, int> > recursos;
@@ -78,17 +79,13 @@ int main() {
         }
     }
 
-    // wakableTiles.showGraph();
 
-    //ahora tengo que hacer un corte
-    //usando la info de recursos puedo saber que #cortes = recursos -1 (porque quiero cada recurso en una cc)
-    //para eso, deberia procesar los mapas asociados a cada recurso
-    //para eso, tendria que ver de donde lo saca el frances... de manera temporal puedo usar los inputs que el ya tiene
-    // leer el paper entero again
+    //por ahora, el corte hardcodeado ..
+    wakableTiles.removeEdge(0,4);
 
-    std::vector<std::vector<int> > cc = wakableTiles.getConnectedComponents();
+    //tabu search
 
-    std::cout<< "hay " << cc.size() << " componentes conexas" << std::endl;
+    
 
     return 0;
 }
