@@ -1,6 +1,15 @@
-#include <vector>
 #include <algorithm>
-#include "Graph.h"
+#include <limits>
+#include <iostream>
+#include "TabuSearch.h"
+
+std::vector<std::pair<int, int> > copyWithoutIth(const std::vector<std::pair<int, int> >& s, int i) {
+    std::vector<std::pair<int, int> > vec2; 
+    for (int j = 0; j < s.size() && j !=i ; j++) {
+        vec2.push_back(s[j]);
+    } 
+    return vec2;
+}
 
 std::vector<solution> get_neighbors(const solution& s, Graph* g)
 {
@@ -21,8 +30,8 @@ std::vector<solution> get_neighbors(const solution& s, Graph* g)
         }
 
         bool isNotIncluded = std::find(neighbours.begin(), neighbours.end(), new_solution) == neighbours.end();
-        //si la solucion genera n-1 componentes conexas, y no es igual a ninguna otra, agregar
-        if (isNotIncluded && g->simulateCutAndCountConnectedComponentes(new_solution) == resComponents) {
+        //si la solucion genera n-1 componentes conexas con al menos 1 recurso, y no es igual a ninguna otra, agregar
+        if (isNotIncluded && g->isValidSolution(new_solution, resComponents)) {
             neighbours.push_back(new_solution);
         }
     }
@@ -36,7 +45,7 @@ int objective_function(const solution& s, Graph* g)
     // not sure about the paper definition, using this for now
     int squaresArea = g->getSquareDifferenceOfAreaOfConnectedComponentes(s);
 
-    return (length + squaresArea) * (-1);
+    return length + squaresArea;
 }
 
 solution tabu_search(const solution& initial_solution, int max_iterations, int tabu_list_size, Graph* g) {
@@ -47,7 +56,7 @@ solution tabu_search(const solution& initial_solution, int max_iterations, int t
     for (int iter = 0; iter < max_iterations; iter++) {
         std::vector<solution> neighbors = get_neighbors(current_solution, g);
         solution best_neighbor;
-        int best_neighbor_fitness = 0;
+        int best_neighbor_fitness = std::numeric_limits<int>::max();
  
         for (const solution& neighbor : neighbors) {
             if (std::find(tabu_list.begin(), tabu_list.end(), neighbor) == tabu_list.end()) {
@@ -82,12 +91,11 @@ solution tabu_search(const solution& initial_solution, int max_iterations, int t
     return best_solution;
 }
 
-//funciones auxiliares rapidas
-
-std::vector<std::pair<int, int> > copyWithoutIth(const std::vector<std::pair<int, int> >& s, int i) {
-    std::vector<std::pair<int, int> > vec2; 
-    for (int j = 0; j < s.size() && j !=i ; j++) {
-        vec2.push_back(s[j]);
-    } 
-    return vec2;
+void showSolution(solution s) {
+    for (int i = 0; i < s.size(); i++)
+    {
+        std::cout <<"(" << s[i].first << ";" << s[i].second << ") ";
+    }
+    std::cout << std::endl;
 }
+

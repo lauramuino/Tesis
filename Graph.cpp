@@ -1,11 +1,11 @@
 #include "Graph.h"
 #include <iostream>
-#include <set>
 #include <deque>
 #include <cmath>
 
 
-Graph::Graph(int n) {
+Graph::Graph(int n, std::set<int> recursos) {
+    resources = recursos;
     numVertices = n;
     adjMatrix = std::vector(n, std::vector(n,0)); //todo: check adjacency lists
 }
@@ -75,6 +75,33 @@ std::vector<edge> Graph::getNeightbours(int i, int j) {
     }
 
     return res;
+}
+
+bool Graph::isValidSolution(solution s, int countOfCC) {
+    for (int i = 0; i < s.size(); i++) {
+        removeEdge(s[i].first, s[i].second);
+    }
+    std::vector<std::vector<int> > cc = getConnectedComponents();
+    
+    //check if every cc has one resource
+    bool everyCCHasResource = true;
+    for (int i = 0; i < cc.size(); i++)
+    {
+        int j = 0;
+        bool resourceFound = false;
+        while (j< cc[i].size() && !resourceFound) {
+            if (resources.find(cc[i][j]) != resources.end()) {
+                resourceFound = true;
+            }
+            j++;
+        }
+        everyCCHasResource = everyCCHasResource && resourceFound;
+    }
+     ;
+    for (int i = 0; i < s.size(); i++) {
+        addEdge(s[i].first, s[i].second);
+    }
+    return (cc.size() == countOfCC) && everyCCHasResource;
 }
 
 int Graph::simulateCutAndCountConnectedComponentes(solution s) {

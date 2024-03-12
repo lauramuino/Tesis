@@ -1,8 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <utility>
-#include "Graph.h"
+#include "TabuSearch.h"
 
 
 //////////////////FUNCIONES AUXILIARES
@@ -29,7 +28,7 @@ int main() {
     //cargo el mapa en matriz temporal
     int row = 0, nodes = 0, col = 0;
     std::vector<std::vector<int> > map;
-    std::vector<std::pair<int, int> > recursos;
+    std::set<int> recursos;
 
     if (mapFile.is_open()) {
         std::string line;
@@ -46,8 +45,8 @@ int main() {
                 } else if (esRecurso(c)) {
                     nodes++;
                     map[row][col] = nodes;
-                    //lo mismo pero los tengo en una lista para distinguirlos
-                    recursos.push_back(std::make_pair(row,col));
+                    //lo mismo pero los tengo en una lista para distinguir los que son recursos
+                    recursos.insert(nodes);
                 }
                 col++;
             }
@@ -65,7 +64,7 @@ int main() {
     }
 
     // mapa de input a grafo
-    Graph wakableTiles(nodes);
+    Graph wakableTiles(nodes, recursos);
     for (int i = 0; i < row; ++i) {
         for (int j = 0; j < col; ++j) {
             //chequeo de vecino arriba
@@ -80,12 +79,13 @@ int main() {
     }
 
 
-    //por ahora, el corte hardcodeado ..
-    wakableTiles.removeEdge(0,4);
+    // corte inicial hardcodeado ..
+    std::vector<std::pair<int,int> > initial_solution = {std::make_pair(4-1,6-1), std::make_pair(6-1,7-1)};
 
     //tabu search
-
+    solution best = tabu_search(initial_solution, 50, 100, &wakableTiles);
     
+    showSolution(best);
 
     return 0;
 }
