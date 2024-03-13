@@ -62,16 +62,16 @@ bool Graph::neightbours(int i, int j) {
 }
 
 std::vector<edge> Graph::getNeightbours(int i, int j) {
-    std::vector<std::pair<int,int> > res;
+    std::vector<edge> res;
 
-    for (int idx = 0; idx < numVertices && idx!=j; idx++)
+    for (int idx = 0; idx < numVertices; idx++)
     {
-        if(neightbours(i, idx)) res.push_back(std::make_pair(i,idx));
+        if(idx!=j && neightbours(i, idx)) res.push_back(std::make_pair(i,idx));
     }
     
-    for (int idx = 0; idx < numVertices && idx!=i; idx++)
+    for (int idx = 0; idx < numVertices; idx++)
     {
-        if(neightbours(i, idx)) res.push_back(std::make_pair(j,idx));
+        if(idx!=i && neightbours(j, idx)) res.push_back(std::make_pair(j,idx));
     }
 
     return res;

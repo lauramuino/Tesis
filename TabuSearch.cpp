@@ -5,8 +5,9 @@
 
 std::vector<std::pair<int, int> > copyWithoutIth(const std::vector<std::pair<int, int> >& s, int i) {
     std::vector<std::pair<int, int> > vec2; 
-    for (int j = 0; j < s.size() && j !=i ; j++) {
-        vec2.push_back(s[j]);
+    for (int j = 0; j < s.size() ; j++) {
+        if (j != i)
+            vec2.push_back(s[j]);
     } 
     return vec2;
 }
@@ -15,7 +16,7 @@ std::vector<solution> get_neighbors(const solution& s, Graph* g)
 {
     //a solution is list of edges of the graph
     // that produces n connected components
-    std::vector<std::vector<std::pair<int, int> > > neighbours;
+    std::vector<solution> neighbours;
     int resComponents = g->simulateCutAndCountConnectedComponentes(s);
 
     for (size_t i = 0; i < s.size(); i++) {
@@ -24,9 +25,13 @@ std::vector<solution> get_neighbors(const solution& s, Graph* g)
         // add neighbour edges of i, if they are not already
         solution next_edges =  g->getNeightbours(s[i].first, s[i].second);
         for (int j = 0; j < next_edges.size(); j++) {
-            if(std::find(new_solution.begin(), new_solution.end(), next_edges[j]) == new_solution.end() ) {
-                new_solution.push_back(next_edges[j]);
+            bool canBeAdded = true;
+            for (int k = 0; k < new_solution.size() && canBeAdded; k++)
+            {
+                edge inverse_new_solution_k = std::make_pair(new_solution[k].second, new_solution[k].first);
+                canBeAdded = canBeAdded && ( next_edges[j] != new_solution[k] && next_edges[j] != inverse_new_solution_k );
             }
+            if (canBeAdded) new_solution.push_back(next_edges[j]);            
         }
 
         bool isNotIncluded = std::find(neighbours.begin(), neighbours.end(), new_solution) == neighbours.end();

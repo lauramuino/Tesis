@@ -39,28 +39,21 @@ int main() {
             std::vector<int> empty(line.size(), 0);
             map.push_back(empty);
             for (char& c : line) {
-                if (esCaminable(c)) {
+                if (esCaminable(c) || esRecurso(c)) {
                     nodes++;
                     map[row][col] = nodes; //guardo el "numero" de nodo
-                } else if (esRecurso(c)) {
-                    nodes++;
-                    map[row][col] = nodes;
-                    //lo mismo pero los tengo en una lista para distinguir los que son recursos
-                    recursos.insert(nodes);
+                    if (esRecurso(c)) {
+                        recursos.insert(nodes); //lista para distinguir los que son recursos
+                    }
                 }
                 col++;
             }
             row++;
         }
         mapFile.close();
-
-       std::cout << "cantidad de filas: " << row << std::endl;
-       std::cout << "cantidad de columnas: " << col << std::endl;
-       std::cout << "cantidad de nodos: " << nodes << std::endl;
-
     } else {
         std::cout << "Unable to open file";
-        return 0;
+        return 1;
     }
 
     // mapa de input a grafo
@@ -69,7 +62,7 @@ int main() {
         for (int j = 0; j < col; ++j) {
             //chequeo de vecino arriba
             if (map[i][j] > 0 && i > 0 && map[i-1][j] > 0) {
-                wakableTiles.addEdge(map[i][j] -1, map[i-1][j] -1);
+                wakableTiles.addEdge(map[i][j] -1, map[i-1][j] -1); //los nodos se cuentan desde uno, porque las posiciones 0 representa una parte de mapa no caminable
             }
             //chequeo de vecino izquierda
             if (map[i][j] > 0 && j > 0 && map[i][j-1] > 0) {
