@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <utility>
-#include "TabuSearch.h"
+#include "Solution.h"
 
 
 //////////////////FUNCIONES AUXILIARES
@@ -22,28 +22,28 @@ bool esRecurso (char &c)
 int main() {
 
     // abro mapa de input
-    std::ifstream mapFile;
+    ifstream mapFile;
     mapFile.open ("./maps/test2"); //todo: hardcodeado
 
     //cargo el mapa en matriz temporal
     int row = 0, nodes = 0, col = 0;
-    std::vector<std::vector<int> > map;
-    std::set<int> recursos;
+    vector<vector<int> > map;
+    set<int> recursos;
 
     if (mapFile.is_open()) {
-        std::string line;
+        string line;
 
         while ( getline (mapFile,line) )
         {
             col = 0;
-            std::vector<int> empty(line.size(), 0);
+            vector<int> empty(line.size(), 0);
             map.push_back(empty);
             for (char& c : line) {
                 if (esCaminable(c) || esRecurso(c)) {
                     nodes++;
                     map[row][col] = nodes; //guardo el "numero" de nodo
                     if (esRecurso(c)) {
-                        recursos.insert(nodes); //lista para distinguir los que son recursos
+                        recursos.insert(nodes-1); //lista para distinguir los que son recursos
                     }
                 }
                 col++;
@@ -52,7 +52,7 @@ int main() {
         }
         mapFile.close();
     } else {
-        std::cout << "Unable to open file";
+        cout << "Unable to open file";
         return 1;
     }
 
@@ -73,12 +73,12 @@ int main() {
 
 
     // corte inicial hardcodeado ..
-    std::vector<std::pair<int,int> > initial_solution = {std::make_pair(4-1,6-1), std::make_pair(6-1,7-1)};
+    vector<edge> initialSolution = {make_pair(4-1,6-1), make_pair(6-1,7-1)};
 
     //tabu search
-    solution best = tabu_search(initial_solution, 50, 100, &wakableTiles);
-    
-    showSolution(best);
+    Solution s = Solution(initialSolution, &wakableTiles);
+    vector<edge> bestSolution = s.tabuSearch(50, 100);
+    s.showSolution(bestSolution);
 
     return 0;
 }

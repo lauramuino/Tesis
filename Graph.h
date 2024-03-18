@@ -4,29 +4,26 @@
 #include <vector>
 #include <set>
 
-typedef std::pair<int, int> edge;
-typedef std::vector<edge> solution;
+using namespace std;
 
 class Graph {
     int numVertices;
-    std::set<int> resources;
-    std::vector<std::vector<int> > adjMatrix;
+    set<int> resourceBag;
+    vector<vector<int> > adjMatrix;
 
 
     public:
-    explicit Graph(int, std::set<int>);
+    Graph(int, set<int>);
     ~Graph();
     void addEdge(int, int);
     void removeEdge(int, int);
     bool neightbours(int, int);
-    std::vector<edge> getNeightbours(int, int);
-    std::vector<std::vector<int> > getConnectedComponents();
+    bool isResource(int);
+    vector<int> getNeighbours(int);
+    vector<vector<int> > getConnectedComponents();
     void showGraph();
-    int simulateCutAndCountConnectedComponentes(solution);
-    int getSquareDifferenceOfAreaOfConnectedComponentes(solution);
-    bool isValidSolution(solution, int);
-
     int nodes() { return numVertices; }
+    int resources() { return resourceBag.size(); }
 };
 
 
