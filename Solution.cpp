@@ -77,36 +77,41 @@ vector<vector<edge> > Solution::getNeighbourhood(vector<edge> &s)
 
 int Solution::objectiveFunction(vector<edge> &s)
 {
-    // the length of separations should be minimum
-    int length = s.size();
-    // not sure about the paper definition, using this for now
     doCutsToGraph(s);
     vector<vector<int> > cc = graph->getConnectedComponents();
     undoCutsToGraph(s);
 
-    int meanArea = 0;
+    int ccWithoutResources = 0;
+    int highestResourcesOnSameCC = 0;
     for (int i = 0; i < cc.size(); i++)
     {
-        int area = cc[i].size();
+        int totalResources = 0;
+        for (int j = 0; j < cc[i].size(); j++)
+        {
+            if (graph->isResource(cc[i][j]))
+            {
+               totalResources += 1;
+            }
+        }
+        if (totalResources > highestResourcesOnSameCC)
+        {
+            highestResourcesOnSameCC = totalResources;
+        }
+        if (totalResources == 0)
+        {
+            ccWithoutResources++;
+        }
     }
-    meanArea = meanArea/cc.size();
-
-    int squaresArea = 0;
-    for (int i = 0; i < cc.size(); i++)
-    {
-        squaresArea = squaresArea + pow(meanArea - cc[i].size(), 2);
-    }
- 
-    return length + squaresArea;
+    return highestResourcesOnSameCC - 1 + ccWithoutResources;
 }
 
-vector<edge> Solution::tabuSearch(int max_iterations, int tabu_list_size)
+vector<edge> Solution::tabuSearch(int maxIterations, int tabuListSize)
 {
     vector<edge> bestSolution = startingEdges;
     vector<edge> currentSolution = startingEdges;
     vector<vector<edge> > tabu_list;
  
-    for (int iter = 0; iter < max_iterations; iter++) {
+    for (int iter = 0; iter < maxIterations; iter++) {
         vector<vector<edge> > neighbours = getNeighbourhood(currentSolution);
         vector<edge> best_neighbour;
         int best_neighbour_fitness = numeric_limits<int>::max();
