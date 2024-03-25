@@ -10,68 +10,50 @@ Solution::Solution(vector<edge> &s, Graph* g)
     graph = g;
 }
 
-bool Solution::notInCC(int node, vector<int> &cc)
+bool Solution::notIn(vector<edge> &s, int i, int j)
 {
-    for (int i = 0; i < cc.size(); i++)
+    edge e = make_pair(i, j);
+    edge d = make_pair(j, i);
+
+    vector<edge>::iterator it = s.begin();
+    while(it != s.end())
     {
-        if (cc[i] == node)
+        if ((*it) == e || (*it) == d)
         {
             return false;
         }
+        it++;
     }
     return true;
-}
-
-void Solution::removeOldEdges(vector<edge> &cc, int node)
-{
-    vector<edge>::iterator it = cc.begin();
-
-    while(it != cc.end())
-    {
-        if((*it).first == node || (*it).second == node){
-            it = cc.erase(it);
-        } else {
-            ++it;
-        } 
-    }
 }
 
 vector<vector<edge> > Solution::getNeighbourhood(vector<edge> &s)
 {
     vector<vector<edge> > neighbours;
-    doCutsToGraph(s);
-    vector<vector<int> > cc = graph->getConnectedComponents();
-    undoCutsToGraph(s);
 
-    // for every cc, we add add a neighbouring node from other cc when possible
-    for (int i = 0; i < cc.size(); i++)
+    // remove one edge if any
+    for (int i = 0; i < s.size(); i++)
     {
-        for (int j = 0; j < cc[i].size(); j++)
+        vector<edge> newSolution = s;
+        vector<edge>::iterator it = newSolution.begin();
+        newSolution.erase(it+i);
+        neighbours.push_back(newSolution);
+    }
+    
+    // add one edge if any
+    for (int i = 0; i < graph->nodes(); i++)
+    {
+        for (int j = i+1; j < graph->nodes(); j++) 
         {
-            vector<int> nodes = graph->getNeighbours(cc[i][j]);
-            //we want the ones outside de cc that are not resources
-            for (int k = 0; k < nodes.size(); k++)
+            if (graph->neighbours(i, j) && notIn(s, i, j))
             {
-                bool isNotResource = !graph->isResource(nodes[k]);
-                bool kNotInCC_i = notInCC(nodes[k], cc[i]);
-                if (isNotResource && kNotInCC_i)
-                {
-                    vector<edge> newSolution = startingEdges;
-                    //delete nodes[k] edges
-                    removeOldEdges(newSolution, nodes[k]);//problema: puede generar mas cc de las deseadas
-                    //add node with cc[i][j] 
-                    newSolution.push_back(make_pair(cc[i][j], nodes[k])); //problema: puede que genere un ciclo y pierda componentes conexas
-                    
-                    bool isNotIncluded = find(neighbours.begin(), neighbours.end(), newSolution) == neighbours.end();
-                    //if solution generates n-1 cc, with a resource in each, save solution
-                    if (isNotIncluded && isValidCut(newSolution)) {
-                        neighbours.push_back(newSolution);
-                    }
-                }
+                vector<edge> newSolution = s;
+                newSolution.push_back(make_pair(i,j));
+                neighbours.push_back(newSolution);
             }
         }
     }
-
+    
     return neighbours;
 }
 
@@ -133,7 +115,7 @@ vector<edge> Solution::tabuSearch(int maxIterations, int tabuListSize)
  
         currentSolution = best_neighbour;
         tabu_list.push_back(best_neighbour);
-        if (tabu_list.size() > tabu_list_size) {
+        if (tabu_list.size() > tabuListSize) {
             // Remove the oldest entry from the
             // tabu list if it exceeds the size
             tabu_list.erase(tabu_list.begin());
@@ -147,35 +129,6 @@ vector<edge> Solution::tabuSearch(int maxIterations, int tabuListSize)
     }
  
     return bestSolution;
-}
-
-bool Solution::isValidCut(vector<edge> &s)
-{
-    doCutsToGraph(s);
-    vector<vector<int> > cc = graph->getConnectedComponents();
-    undoCutsToGraph(s);
-    
-    //check if every cc has one resource
-    bool everyCCHasResource = true;
-    for (int i = 0; i < cc.size(); i++) {
-        int j = 0;
-        bool resourceFound = false;
-        while (j < cc[i].size() && !resourceFound) {
-            resourceFound = graph->isResource(cc[i][j]);
-            j++;
-        }
-        everyCCHasResource = everyCCHasResource && resourceFound;
-    }
-    int wantedCCCount = graph->resources();
-    int ccCount = cc.size();
-    //debug 
-    if (ccCount != wantedCCCount)
-    {
-        cout << "Se generaron " << ccCount << "cc's en lugar de " << wantedCCCount << endl;
-    }
-    
-
-    return (ccCount == wantedCCCount) && everyCCHasResource;
 }
 
 void Solution::showSolution(vector<edge> &s)

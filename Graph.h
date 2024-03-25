@@ -11,13 +11,12 @@ class Graph {
     set<int> resourceBag;
     vector<vector<int> > adjMatrix;
 
-
     public:
     Graph(int, set<int>);
     ~Graph();
     void addEdge(int, int);
     void removeEdge(int, int);
-    bool neightbours(int, int);
+    bool neighbours(int, int);
     bool isResource(int);
     vector<int> getNeighbours(int);
     vector<vector<int> > getConnectedComponents();

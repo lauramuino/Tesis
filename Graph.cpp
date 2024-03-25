@@ -45,7 +45,7 @@ vector<vector<int> > Graph::getConnectedComponents()
                     cc.push_back(actual);
                     //add their non visited neighbours
                     for (int j = 0; j < numVertices; j++) {
-                        if (neightbours(actual, j) && visited.find(j) == visited.end()) {
+                        if (neighbours(actual, j) && visited.find(j) == visited.end()) {
                             toVisit.push_front(j);
                         }
                     }
@@ -59,7 +59,7 @@ vector<vector<int> > Graph::getConnectedComponents()
    return connectedComponents;
 }
 
-bool Graph::neightbours(int v, int w)
+bool Graph::neighbours(int v, int w)
 {
     return this->adjMatrix[v][w];
 }
@@ -75,7 +75,7 @@ vector<int> Graph::getNeighbours(int v)
 
     for (int i = 0; i < numVertices; i++)
     {
-        if ( neightbours(i, v)) res.push_back(i);
+        if ( neighbours(i, v)) res.push_back(i);
     }
 
     return res;
