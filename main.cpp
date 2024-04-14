@@ -73,11 +73,18 @@ int main() {
 
 
     // corte inicial hardcodeado ..
-    vector<edge> initialSolution = {make_pair(4-1,6-1), make_pair(6-1,7-1)};
+    // vector<edge> initialSolution = {make_pair(3,5), make_pair(5,6)};
+    vector<edge> initialSolution = {make_pair(0,1)};
 
     //tabu search
+    int iterations, tabuListSize;
     Solution s = Solution(initialSolution, &wakableTiles);
-    vector<edge> bestSolution = s.tabuSearch(50, 100);
+
+    cout << "Ingresar maxima cantidad de iteraciones:" << endl;
+    cin >> iterations;
+    cout << "Ingresar capacidad de lista tabu:" << endl;
+    cin >> tabuListSize;
+    vector<edge> bestSolution = s.tabuSearch(iterations, tabuListSize);
     s.showSolution(bestSolution);
 
     return 0;

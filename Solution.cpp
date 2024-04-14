@@ -37,7 +37,7 @@ vector<vector<edge> > Solution::getNeighbourhood(vector<edge> &s)
         vector<edge> newSolution = s;
         vector<edge>::iterator it = newSolution.begin();
         newSolution.erase(it+i);
-        neighbours.push_back(newSolution);
+        if (newSolution.size() > 0) neighbours.push_back(newSolution);
     }
     
     // add one edge if any
@@ -65,26 +65,31 @@ int Solution::objectiveFunction(vector<edge> &s)
 
     int ccWithoutResources = 0;
     int highestResourcesOnSameCC = 0;
+    int totalArea = 0;
+    vector<int> areas;
     for (int i = 0; i < cc.size(); i++)
     {
+        totalArea += cc[i].size();
+        areas.push_back(cc[i].size());
         int totalResources = 0;
         for (int j = 0; j < cc[i].size(); j++)
         {
-            if (graph->isResource(cc[i][j]))
-            {
-               totalResources += 1;
-            }
+            if (graph->isResource(cc[i][j]))  totalResources += 1;
         }
-        if (totalResources > highestResourcesOnSameCC)
-        {
-            highestResourcesOnSameCC = totalResources;
-        }
-        if (totalResources == 0)
-        {
-            ccWithoutResources++;
-        }
+        if (totalResources > highestResourcesOnSameCC)  highestResourcesOnSameCC = totalResources;
+        if (totalResources == 0) ccWithoutResources++; 
     }
-    return highestResourcesOnSameCC - 1 + ccWithoutResources;
+    int meanArea = totalArea / cc.size();
+    int leastSquaresArea = 0;
+    for (int a = 0; a < cc.size(); a++)
+    {
+        leastSquaresArea += pow(meanArea-areas[a], 2);
+    }
+    
+    int resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
+    // int separationLength = s.size();
+
+    return leastSquaresArea + resourcesBalanced; //  + separationLength
 }
 
 vector<edge> Solution::tabuSearch(int maxIterations, int tabuListSize)
