@@ -1,93 +1,59 @@
+#include <map>
 #include "Graph.h"
-#include <iostream>
-#include <deque>
 
-Graph::Graph(int n, set<int> r)
+using namespace std;
+
+Graph::Graph(Map & m)
 {
-    resourceBag = r;
-    numVertices = n;
-    adjMatrix = vector(n, vector(n,0));
+    totalNodes = m.rows() * m.columns() - m.unwakableTiles();
+    int nodeCount = 0;
+    map<position, int> translation; //given a position on the map, i save the corresponding node on the graph
+    
+    //initial structure, without neighbour data
+    for (int i = 0; i < m.rows(); i++)
+    {
+        for (int j = 0; j < m.columns(); j++)
+        {
+            int value = m.at(i, j);
+            if (isResource(value) || isWalkable(value))
+            {
+                Node n;
+                position p =  make_pair(i, j);
+                translation[p] = nodeCount; 
+                n.mapLocation = p;
+                n.value = value;
+                adjacencyList.push_back(n);
+                nodeCount++;
+            }
+        }
+    }
+
+    if (nodeCount != totalNodes) {
+        cout << "Error at Graph initialization: number of nodes mismatch" << endl;
+        exit(EXIT_FAILURE);
+    }
+     
+    //filling with neighbour info
+    for (int k = 0; k < totalNodes; k++)
+    {
+        Node n = adjacencyList[k];
+        vector<position> neighbours = m.getWalkableNeighbours(n.mapLocation);
+        for (int h = 0; h < neighbours.size(); h++)
+        {
+            int index = translation[neighbours[h]];
+            n.neighbours.push_back(index);
+        }   
+    }
 }
 
 Graph::~Graph() = default;
 
-void Graph::addEdge(int v, int w)
+bool isResource(int v)
 {
-    adjMatrix[v][w] = 1;
-    adjMatrix[w][v] = 1;
+    return v == 2;
 }
 
-void Graph::removeEdge(int v, int w)
+bool isWalkable(int v)
 {
-    adjMatrix[v][w] = 0;
-    adjMatrix[w][v] = 0;
-}
-
-vector<vector<int> > Graph::getConnectedComponents()
-{
-    set<int> visited;
-    vector<vector<int> > connectedComponents;
-
-   for (int v = 0; v < numVertices; v++) {
-        bool notVisited = visited.find(v) == visited.end();
-
-        if (notVisited) {
-            vector<int> cc;
-            deque<int> toVisit;
-            toVisit.push_front(v);
-
-            while(!toVisit.empty()) {
-                int actual = toVisit.back();
-                toVisit.pop_back();
-                //if not already visited
-                if(visited.find(actual) == visited.end()) {
-                    visited.insert(actual);
-                    cc.push_back(actual);
-                    //add their non visited neighbours
-                    for (int j = 0; j < numVertices; j++) {
-                        if (neighbours(actual, j) && visited.find(j) == visited.end()) {
-                            toVisit.push_front(j);
-                        }
-                    }
-                }
-            }
-
-            //add new cc
-            connectedComponents.push_back(cc);
-        }
-   }
-   return connectedComponents;
-}
-
-bool Graph::neighbours(int v, int w)
-{
-    return this->adjMatrix[v][w];
-}
-
-bool Graph::isResource(int v)
-{
-    return ( resourceBag.find(v) != resourceBag.end() );
-}
-
-vector<int> Graph::getNeighbours(int v)
-{
-    vector<int> res;
-
-    for (int i = 0; i < numVertices; i++)
-    {
-        if ( neighbours(i, v)) res.push_back(i);
-    }
-
-    return res;
-}
-
-void Graph::showGraph()
-{
-    for (int i = 0; i < nodes(); ++i) {
-        for (int j = 0; j < nodes(); ++j) {
-            cout << adjMatrix[i][j];
-        }
-        cout << endl;
-    }
-    cout << endl;
+    return v == 1;
 }
