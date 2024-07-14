@@ -47,13 +47,3 @@ Graph::Graph(Map & m)
 }
 
 Graph::~Graph() = default;
-
-bool isResource(int v)
-{
-    return v == 2;
-}
-
-bool isWalkable(int v)
-{
-    return v == 1;
-}

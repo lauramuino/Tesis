@@ -11,6 +11,7 @@ class Map {
     int totalColumns;
     int totalUnwakableTiles;
     void FloydWarshallWithPathReconstruction();
+    bool inRange(pair<int,int>);
 
     public:
     Map(ifstream &);

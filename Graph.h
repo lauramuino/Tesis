@@ -16,4 +16,6 @@ class Graph {
     public:
     Graph(Map &);
     ~Graph();
+    bool isResource(int v){return v == 2;}
+    bool isWalkable(int v){return v == 1;}
 };

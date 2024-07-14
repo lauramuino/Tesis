@@ -10,10 +10,10 @@ Map::Map(ifstream & f)
         positions.push_back(empty);
         for (char& c : line) {
             positions[row][col] = c - '0';
-            col++;
             if (positions[row][col] == 0) {
                 unwakableTiles++;
             }
+            col++;
         }
         row++;
     }
@@ -55,23 +55,21 @@ bool Map::isBorder(int i, int j)
 vector<position> Map::getWalkableNeighbours(position p)
 {
     vector<position> walkableNeighbours;
-    int i = p.first;
-    int j = p.second;
 
-    for (int a = -1; a <= 1; a++)
-    {
-        // TODO: COMPLETAR ESTA FUNCION 
+    for (int a = -1; a <= 1; a++) {
+        for (int b = -1; b <= 1; b++) {
+            pair<int,int> v = make_pair(p.first + a, p.second + b);
+            if (v != p && inRange(v) && this->at(v.first, v.second) != 0) {
+                walkableNeighbours.push_back(v);
+            }
+        }       
     }
-    
-    if (positions[i-1][j] != 0) {walkableNeighbours.push_back(make_pair(i-1,j));}
-    if (positions[i+1][j] != 0) {walkableNeighbours.push_back(make_pair(i, j));}
-    if (positions[i][j-1] != 0) {walkableNeighbours.push_back(make_pair(i, j));}
-    if (positions[i][j+1] != 0) {walkableNeighbours.push_back(make_pair(i, j));}
-
-    bool d_left_up    = positions[i-1][j-1] == 0;
-    bool d_left_down  = positions[i-1][j+1] == 0;
-    bool d_right_up   = positions[i+1][j-1] == 0;
-    bool d_right_down = positions[i+1][j+1] == 0;
-
     return walkableNeighbours;
+}
+
+bool Map::inRange(pair<int, int> p)
+{
+    bool xInRange = p.first >=0 && p.first <= positions.size() - 1;
+    bool yInRange = p.second >=0 && p.second <= positions[0].size() -1;
+    return xInRange && yInRange;
 }

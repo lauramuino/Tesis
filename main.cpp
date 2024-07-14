@@ -1,7 +1,7 @@
 #include <iostream>
 #include <utility>
 #include "Solution.h"
-#include "Map.h"
+#include "Graph.h"
 
 typedef pair<int, int> position;
 
@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
     
     vector<vector<int> > map;
     if (mapFile.is_open()) {
-        //loading map
-        Map map = Map(mapFile);
+        Map mapa = Map(mapFile);
+        Graph grafo = Graph(mapa);
     } else {
         cout << "Unable to open map file.";
         return EXIT_FAILURE;
