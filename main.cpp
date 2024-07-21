@@ -1,9 +1,6 @@
 #include <iostream>
 #include <utility>
 #include "Solution.h"
-#include "Graph.h"
-
-typedef pair<int, int> position;
 
 int main(int argc, char* argv[]) {
 
@@ -19,6 +16,15 @@ int main(int argc, char* argv[]) {
     if (mapFile.is_open()) {
         Map mapa = Map(mapFile);
         Graph grafo = Graph(mapa);
+        grafo.FloydWarshallWithPathReconstruction();
+        path a = grafo.getMinPath(2,3);
+        showPath(a);
+        //puedo establecer en base a la # de recursos
+        //cuantos cortes (o pares de nodos) necesito
+        //como elijo los puntos iniciales?
+        //como armo la vecindad?
+        //como decido cual es mejor
+
     } else {
         cout << "Unable to open map file.";
         return EXIT_FAILURE;

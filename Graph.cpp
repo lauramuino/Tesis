@@ -36,14 +36,76 @@ Graph::Graph(Map & m)
     //filling with neighbour info
     for (int k = 0; k < totalNodes; k++)
     {
-        Node n = adjacencyList[k];
-        vector<position> neighbours = m.getWalkableNeighbours(n.mapLocation);
+        vector<position> neighbours = m.getWalkableNeighbours(adjacencyList[k].mapLocation);
         for (int h = 0; h < neighbours.size(); h++)
         {
             int index = translation[neighbours[h]];
-            n.neighbours.push_back(index);
-        }   
+            adjacencyList[k].neighbours.push_back(index);
+        }
     }
 }
 
 Graph::~Graph() = default;
+
+void showMatrix(vector<vector<int> > &m)
+{
+    for (int i = 0; i < m.size(); i++)
+    {
+        for (int j = 0; j < m[0].size(); j++)
+        {
+            cout << m[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+void Graph::FloydWarshallWithPathReconstruction()
+{
+    int maxDistance = this->totalNodes * 2;
+    vector<vector<int> > distance(this->totalNodes, vector<int>(this->totalNodes, maxDistance));
+    vector<vector<int> > previous(this->totalNodes, vector<int>(this->totalNodes, -1));
+    for (int i = 0; i < this->totalNodes; i++) {
+        distance[i][i] = 0;
+        previous[i][i] = i;
+        vector<int> edges = this->adjacencyList[i].neighbours;
+        for (int j = 0; j < edges.size(); j++) {
+            //edge i -> j
+            distance[i][edges[j]] = 1;
+            previous[i][edges[j]] = i;
+        }
+        
+    }
+
+    for (int k = 0; k < this->totalNodes; k++) {
+        for (int i = 0; i < this->totalNodes; i++) {
+            for (int j = 0; j < this->totalNodes; j++) {
+                if (distance[i][j] > distance[i][k] + distance[k][j]) {
+                    distance[i][j] = distance[i][k] + distance[k][j];
+                    previous[i][j] = previous[k][j];
+                }
+            }
+        }
+    }
+
+    this->paths = previous;
+}
+
+
+path Graph::getMinPath(int u, int v) //recieves graph indexes
+{
+    path res;
+    if (this->paths[u][v] == 0) {
+        return {};
+    }
+
+    res.insert(res.begin(), this->adjacencyList[v].mapLocation);
+    int idx = v;
+
+    while (idx != u) {
+        idx = this->paths[u][idx];
+        res.insert(res.begin(), this->adjacencyList[idx].mapLocation);
+    }
+    
+    return res; //returns map indexes
+}
