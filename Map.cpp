@@ -2,7 +2,7 @@
 
 Map::Map(ifstream & f) 
 {
-    int row = 0, col = 0, unwakableTiles = 0;
+    int row = 0, col = 0, resources = 0;
     string line;
     while ( getline(f, line) ) {
         col = 0;
@@ -10,9 +10,9 @@ Map::Map(ifstream & f)
         positions.push_back(empty);
         for (char& c : line) {
             positions[row][col] = c - '0';
-            if (positions[row][col] == 0) {
-                unwakableTiles++;
-            }
+            if (positions[row][col] == 2) {
+                resources++;
+            }       
             col++;
         }
         row++;
@@ -21,7 +21,7 @@ Map::Map(ifstream & f)
 
     totalColumns = col;
     totalRows = row;
-    totalUnwakableTiles = unwakableTiles;
+    totalResources = resources;
 }
 
 Map::~Map() = default;
@@ -52,6 +52,29 @@ bool Map::isBorder(int i, int j)
     return (sides || diagonals) && (positions[i][j] == 1);
 }
 
+vector<position> Map::getBorders()
+{
+    vector<position> borders;
+    for (int i = 0; i < positions.size(); i++)
+    {
+        for (int j = 0; j < positions.size(); j++)
+        {
+            if(isBorder(i, j) && positions[i][j] != 2) {
+                borders.push_back(make_pair(i,j));
+            }
+        }
+    }
+    
+    return borders;
+}
+
+bool Map::inRange(pair<int, int> p)
+{
+    bool xInRange = p.first >=0 && p.first <= positions.size() - 1;
+    bool yInRange = p.second >=0 && p.second <= positions[0].size() -1;
+    return xInRange && yInRange;
+}
+
 vector<position> Map::getWalkableNeighbours(position p)
 {
     vector<position> walkableNeighbours;
@@ -64,12 +87,37 @@ vector<position> Map::getWalkableNeighbours(position p)
             }
         }       
     }
+    
     return walkableNeighbours;
 }
 
-bool Map::inRange(pair<int, int> p)
-{
-    bool xInRange = p.first >=0 && p.first <= positions.size() - 1;
-    bool yInRange = p.second >=0 && p.second <= positions[0].size() -1;
-    return xInRange && yInRange;
+//Bresenham's line algorithm (https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
+path Map::getPathBetween(position x, position y) {
+    int dx = abs(y.first - x.first);
+    int dy = abs(y.second - x.second);
+    int sx = (x.first < y.first) ? 1 : -1;
+    int sy = (x.second < y.second) ? 1 : -1;
+    int err = dx - dy;
+
+    path result;
+
+    while (x != y ) {
+
+        if (this->inRange(x)) {
+            result.push_back(x);
+        }
+
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x.first += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            x.second += sy;
+        }
+    }
+    result.push_back(x);
+
+    return result;
 }

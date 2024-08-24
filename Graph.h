@@ -1,26 +1,27 @@
 #include <iostream>
 #include <stdlib.h>
+#include <utility>
+#include <set>
+#include <deque>
 #include "Map.h"
 
-typedef vector<position> path;
-
-struct Node
-{
-    vector<int> neighbours;
-    position mapLocation;
-    int value;
-};
+typedef vector<path> solution;
 
 class Graph {
     int totalNodes;
-    vector<Node> adjacencyList;
-    vector<vector<int> > paths;
+    vector<vector<int> > adjacencyList;
+    vector<position> nodeToMapIndex;
+    set<int> resources;
+    void makeCuts(solution &s);
+    void undoCuts(solution &s);
+    void removeEdge(int, int);
+    void removeNeighbourAFromB(int a, int b);
+    vector<vector<int> > getConnectedComponents();
 
     public:
-    Graph(Map &);
+    Graph(Map &m);
     ~Graph();
     bool isResource(int v){return v == 2;}
     bool isWalkable(int v){return v == 1;}
-    void FloydWarshallWithPathReconstruction();
-    path getMinPath(int u, int v);
+    vector<int> getInfoOfCutsMadeBy(solution &s);
 };

@@ -1,3 +1,3 @@
 #include "Graph.h"
 
-void showPath(path);
+solution tabuSearch(int maxIterations, int tabuListSize, Map &map, solution &initialSolution);

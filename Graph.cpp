@@ -1,13 +1,15 @@
-#include <map>
+#include <algorithm>
+#include <cmath>
 #include "Graph.h"
 
 using namespace std;
 
-Graph::Graph(Map & m)
+Graph::~Graph() = default;
+
+Graph::Graph(Map &m)
 {
-    totalNodes = m.rows() * m.columns() - m.unwakableTiles();
     int nodeCount = 0;
-    map<position, int> translation; //given a position on the map, i save the corresponding node on the graph
+    vector<position> translation; //given a node number, get its corresponding position on the map
     
     //initial structure, without neighbour data
     for (int i = 0; i < m.rows(); i++)
@@ -17,95 +19,152 @@ Graph::Graph(Map & m)
             int value = m.at(i, j);
             if (isResource(value) || isWalkable(value))
             {
-                Node n;
+                if (isResource(value)) resources.insert(nodeCount);
+                
                 position p =  make_pair(i, j);
-                translation[p] = nodeCount; 
-                n.mapLocation = p;
-                n.value = value;
-                adjacencyList.push_back(n);
+                translation.push_back(p); 
                 nodeCount++;
             }
         }
     }
-
-    if (nodeCount != totalNodes) {
-        cout << "Error at Graph initialization: number of nodes mismatch" << endl;
-        exit(EXIT_FAILURE);
-    }
+    nodeToMapIndex = translation;
+    totalNodes = nodeCount;
      
     //filling with neighbour info
     for (int k = 0; k < totalNodes; k++)
     {
-        vector<position> neighbours = m.getWalkableNeighbours(adjacencyList[k].mapLocation);
-        for (int h = 0; h < neighbours.size(); h++)
+        vector<position> neighbours = m.getWalkableNeighbours(translation[k]);
+        for (position neighbour : neighbours)
         {
-            int index = translation[neighbours[h]];
-            adjacencyList[k].neighbours.push_back(index);
+            auto it = find(translation.begin(), translation.end(), neighbour);
+            if (it != std::end(translation)) {
+               int index = it - translation.begin();
+                adjacencyList[k].push_back(index);
+            }
         }
     }
 }
 
-Graph::~Graph() = default;
-
-void showMatrix(vector<vector<int> > &m)
+void Graph::removeNeighbourAFromB(int a, int b)
 {
-    for (int i = 0; i < m.size(); i++)
+    for (int i = 0; i < adjacencyList[b].size(); i++)
     {
-        for (int j = 0; j < m[0].size(); j++)
+        auto it = find(adjacencyList[b].begin(), adjacencyList[b].end(), a);
+        if (it != adjacencyList[b].end())
         {
-            cout << m[i][j] << " ";
+            adjacencyList[b].erase(it);
         }
-        cout << endl;
     }
-    cout << endl;
 }
 
-void Graph::FloydWarshallWithPathReconstruction()
+void Graph::removeEdge(int a, int b)
 {
-    int maxDistance = this->totalNodes * 2;
-    vector<vector<int> > distance(this->totalNodes, vector<int>(this->totalNodes, maxDistance));
-    vector<vector<int> > previous(this->totalNodes, vector<int>(this->totalNodes, -1));
-    for (int i = 0; i < this->totalNodes; i++) {
-        distance[i][i] = 0;
-        previous[i][i] = i;
-        vector<int> edges = this->adjacencyList[i].neighbours;
-        for (int j = 0; j < edges.size(); j++) {
-            //edge i -> j
-            distance[i][edges[j]] = 1;
-            previous[i][edges[j]] = i;
-        }
-        
-    }
+    removeNeighbourAFromB(a, b);
+    removeNeighbourAFromB(b, a);
+}
 
-    for (int k = 0; k < this->totalNodes; k++) {
-        for (int i = 0; i < this->totalNodes; i++) {
-            for (int j = 0; j < this->totalNodes; j++) {
-                if (distance[i][j] > distance[i][k] + distance[k][j]) {
-                    distance[i][j] = distance[i][k] + distance[k][j];
-                    previous[i][j] = previous[k][j];
+void Graph::makeCuts(solution &s)
+{
+    for (int i = 0; i < s.size(); i++)
+    {
+        for (int j = 0; j < s[i].size()-1; j++)
+        {
+            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j]);
+            if (it != nodeToMapIndex.end())
+            {
+                int a = it - nodeToMapIndex.begin();
+                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j+1]);
+                if (it != nodeToMapIndex.end())
+                {
+                    int b = it - nodeToMapIndex.begin();
+                    removeEdge(a, b);
                 }
             }
         }
     }
-
-    this->paths = previous;
 }
 
-
-path Graph::getMinPath(int u, int v) //recieves graph indexes
+void Graph::undoCuts(solution &s)
 {
-    path res;
-    if (this->paths[u][v] == 0) {
-        return {};
+    for (int i = 0; i < s.size(); i++)
+    {
+        for (int j = 0; j < s[i].size()-1; j++)
+        {
+             auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j]);
+            if (it != nodeToMapIndex.end())
+            {
+                int a = it - nodeToMapIndex.begin();
+                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j+1]);
+                if (it != nodeToMapIndex.end())
+                {
+                    int b = it - nodeToMapIndex.begin();
+                    adjacencyList[a].push_back(b);
+                    adjacencyList[b].push_back(a);
+                }
+            }
+        }
+    }
+}
+
+vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
+{
+    makeCuts(s);
+    vector<vector<int> > connectedComponents = getConnectedComponents();
+    int meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
+    for (auto cc : connectedComponents) {
+        meanArea += cc.size();
+        int cantResources = 0;
+        for (int c : cc) {
+            if (resources.find(c) != resources.end()) cantResources++;
+        }
+        if (highestResourcesOnSameCC < cantResources) highestResourcesOnSameCC = cantResources;
+        if (cantResources == 0) ccWithoutResources++;
+        
+    }
+    meanArea = meanArea / connectedComponents.size();
+
+    int leastSquaresArea = 0;
+    for (auto cc : connectedComponents)
+    {
+        leastSquaresArea += pow(meanArea-cc.size(), 2);
     }
 
-    res.insert(res.begin(), this->adjacencyList[v].mapLocation);
-    int idx = v;
+    undoCuts(s);
+    return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources};
+}
 
-    while (idx != u) {
-        idx = this->paths[u][idx];
-        res.insert(res.begin(), this->adjacencyList[idx].mapLocation);
-    }
-    
-    return res; //returns map indexes
+vector<vector<int> > Graph::getConnectedComponents()
+{
+    set<int> visited;
+    vector<vector<int> > connectedComponents;
+
+   for (int v = 0; v < totalNodes; v++) {
+        bool notVisited = visited.find(v) == visited.end();
+
+        if (notVisited) {
+            vector<int> cc;
+            deque<int> toVisit;
+            toVisit.push_front(v);
+
+            while(!toVisit.empty()) {
+                int actual = toVisit.back();
+                toVisit.pop_back();
+                //if not already visited
+                if(visited.find(actual) == visited.end()) {
+                    visited.insert(actual);
+                    cc.push_back(actual);
+                    //add their non visited neighbours
+                    for (int neighbour : adjacencyList[actual]) {
+                        if (visited.find(neighbour) == visited.end()) {
+                            toVisit.push_front(neighbour);
+                        }
+                    }
+                }
+            }
+
+            //add new cc
+            connectedComponents.push_back(cc);
+        }
+   }
+   return connectedComponents;
 }

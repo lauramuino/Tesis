@@ -1,113 +1,123 @@
 #include <algorithm>
-#include <limits>
 #include <iostream>
 #include <cmath>
 #include "Solution.h"
 
-using namespace std;
-
-typedef vector<path> solution;
-
-void showPath(path p)
+bool noEstaEn(path p, solution &s)
 {
-    for (int i = 0; i < p.size(); i++)
+    for (int i = 0; i < s.size(); i++)
     {
-        cout << "(" <<  p[i].first <<  ", " << p[i].second << ") ";
-    }
-    cout << endl;    
-}
-
-void showMatrix(vector<vector<int> > m)
-{
-    for (int i = 0; i < m.size(); i++)
-    {
-        for (int j = 0; j < m[0].size(); j++)
-        {
-            cout << m[i][j] << " ";
+        bool notTheBegining = (p[0] != s[i][0]) && (p[p.size()-1] != s[i][0]);
+        int lastIndexOfSAti = s[i].size()-1;
+        bool notTheEnd = (p[0] != s[i][lastIndexOfSAti]) && (p[p.size()-1] != s[i][lastIndexOfSAti]);
+        if (notTheBegining && notTheEnd) {
+            return false;
         }
-        cout << endl;
     }
-    cout << endl;
+    
+    return true;
 }
 
-vector<solution> getNeighbourhood(solution &s)
+vector<path> cortesQueNoEstanEn(solution &s, Map &m) 
 {
-    vector<solution> neighbours;
+    vector<position> borders = m.getBorders();
+    vector<path> cortes;
+    for (int i = 0; i < borders.size(); i++)
+    {
+        for (int j = i+1; j < borders.size(); j++)
+        {
+            path nuevoCorte = m.getPathBetween(borders[i], borders[j]);
+            if (noEstaEn(nuevoCorte, s))
+            {
+                cortes.push_back(nuevoCorte);
+            }      
+        }
+    }
+    return cortes;
+}
 
-    // remove one edge if any
-    // for (int i = 0; i < s.size(); i++)
-    // {
-    //     solution newSolution = s;
-    //     solution::iterator it = newSolution.begin();
-    //     newSolution.erase(it+i);
-    //     if (newSolution.size() > 0) neighbours.push_back(newSolution);
-    // }
+bool caminosQueSeCruzan(path a, path b)
+{
+    for (int i = 0; i < a.size(); i++)
+    {
+        for (int j = 0; j < b.size(); j++)
+        {
+            if (a[i] == b[j]) {
+                return true;
+            }
+        } 
+    }
+    return false;
+}
+
+bool noHayCruces(solution &s)
+{
+    for (int i = 0; i < s.size(); i++)
+    {
+        for (int j = i+1; j < s.size(); j++)
+        {
+            if (caminosQueSeCruzan(s[i], s[j]))
+                return true;
+        }
+    }
     
-    // // add one edge if any
-    // for (int i = 0; i < graph->nodes(); i++)
-    // {
-    //     for (int j = i+1; j < graph->nodes(); j++) 
-    //     {
-    //         if (graph->neighbours(i, j) && notIn(s, i, j))
-    //         {
-    //             solution newSolution = s;
-    //             newSolution.push_back(make_pair(i,j));
-    //             neighbours.push_back(newSolution);
-    //         }
-    //     }
-    // }
+    return false;
+}
+
+vector<solution> getNeighbourhood(solution &s, Map &map)
+{ 
+    vector<solution> neighbours;
+    vector<path> cortes = cortesQueNoEstanEn(s, map);
+
+    for (int i = 0; i < cortes.size(); i++)
+    {
+        for (int j = 0; j < s.size(); j++)
+        {
+            solution newSolution = s; 
+            newSolution[j] = cortes[i];
+            if (noHayCruces(newSolution))
+                neighbours.push_back(newSolution);
+        }
+        
+    }
     
     return neighbours;
 }
 
-int objectiveFunction(solution &s)
+int objectiveFunction(solution &s, Graph &grafo)
 {
-    // vector<vector<int> > cc = graph->getConnectedComponents();
-
-    // int ccWithoutResources = 0;
-    // int highestResourcesOnSameCC = 0;
-    // int totalArea = 0;
-    // vector<int> areas;
-    // for (int i = 0; i < cc.size(); i++)
-    // {
-    //     totalArea += cc[i].size();
-    //     areas.push_back(cc[i].size());
-    //     int totalResources = 0;
-    //     for (int j = 0; j < cc[i].size(); j++)
-    //     {
-    //         if (graph->isResource(cc[i][j]))  totalResources += 1;
-    //     }
-    //     if (totalResources > highestResourcesOnSameCC)  highestResourcesOnSameCC = totalResources;
-    //     if (totalResources == 0) ccWithoutResources++; 
-    // }
-    // int meanArea = totalArea / cc.size();
-    // int leastSquaresArea = 0;
-    // for (int a = 0; a < cc.size(); a++)
-    // {
-    //     leastSquaresArea += pow(meanArea-areas[a], 2);
-    // }
+    int averageCutSizes = 0;
+    for (int i = 0; i < s.size(); i++)
+    {
+        averageCutSizes += s[i].size();
+    }
+    averageCutSizes = averageCutSizes / s.size();
     
-    // int resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
-    // // int separationLength = s.size();
+    vector<int> info = grafo.getInfoOfCutsMadeBy(s);
+    int leastSquaresArea = info[0];
+    int highestResourcesOnSameCC = info[1] ;
+    int ccWithoutResources = info[2];
 
-    // return leastSquaresArea + resourcesBalanced; //  + separationLength
-    return 0;
+    int resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
+
+    return leastSquaresArea + resourcesBalanced + averageCutSizes;
 }
 
-solution tabuSearch(int maxIterations, int tabuListSize, Graph graph, solution &initialSolution)
+solution tabuSearch(int maxIterations, int tabuListSize, Map &map, solution &initialSolution)
 {
     solution bestSolution = initialSolution;
     solution currentSolution = initialSolution;
     vector<solution> tabu_list;
+    Graph grafo = Graph(map);
  
     for (int iter = 0; iter < maxIterations; iter++) {
-        vector<solution> neighbours = getNeighbourhood(currentSolution);
+        vector<solution> neighbours = getNeighbourhood(currentSolution, map);
         solution best_neighbour;
         int best_neighbour_fitness = numeric_limits<int>::max();
  
         for(int i = 0; i < neighbours.size(); i++) {
             if (find(tabu_list.begin(), tabu_list.end(), neighbours[i]) == tabu_list.end()) {
-                int neighbour_fitness = objectiveFunction(neighbours[i]);
+                int neighbour_fitness = objectiveFunction(neighbours[i], grafo);
                 if (neighbour_fitness < best_neighbour_fitness) {
                     best_neighbour = neighbours[i];
                     best_neighbour_fitness = neighbour_fitness;
@@ -127,7 +137,7 @@ solution tabuSearch(int maxIterations, int tabuListSize, Graph graph, solution &
             tabu_list.erase(tabu_list.begin());
         }
  
-        if (objectiveFunction(best_neighbour) < objectiveFunction(bestSolution)) {
+        if (objectiveFunction(best_neighbour, grafo) < objectiveFunction(bestSolution, grafo)) {
             // Update the best solution if the current neighbour is better
             bestSolution = best_neighbour;
         }
