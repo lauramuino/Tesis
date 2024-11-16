@@ -10,7 +10,7 @@ typedef vector<path> solution;
 class Graph {
     int totalNodes;
     vector<vector<int> > adjacencyList;
-    vector<position> nodeToMapIndex;
+    vector<position> nodeToMapIndex; //given a node number, get its corresponding position on the map
     set<int> resources;
     void makeCuts(solution &s);
     void undoCuts(solution &s);

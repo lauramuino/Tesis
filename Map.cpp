@@ -22,6 +22,17 @@ Map::Map(ifstream & f)
     totalColumns = col;
     totalRows = row;
     totalResources = resources;
+    
+    //se completa info sobre bordes
+    for (int i = 0; i < positions.size(); i++)
+    {
+        for (int j = 0; j < positions[i].size(); j++)
+        {
+            if(isBorder(i, j) && positions[i][j] != 2) {
+                borderPositions.push_back(make_pair(i,j));
+            }
+        }
+    }
 }
 
 Map::~Map() = default;
@@ -50,22 +61,6 @@ bool Map::isBorder(int i, int j)
 
     //if there's any unbuildable square, is border
     return (sides || diagonals) && (positions[i][j] == 1);
-}
-
-vector<position> Map::getBorders()
-{
-    vector<position> borders;
-    for (int i = 0; i < positions.size(); i++)
-    {
-        for (int j = 0; j < positions.size(); j++)
-        {
-            if(isBorder(i, j) && positions[i][j] != 2) {
-                borders.push_back(make_pair(i,j));
-            }
-        }
-    }
-    
-    return borders;
 }
 
 bool Map::inRange(pair<int, int> p)
@@ -120,4 +115,35 @@ path Map::getPathBetween(position x, position y) {
     result.push_back(x);
 
     return result;
+}
+
+void Map::drawSolution(vector<path> &s)
+{
+    for (int i = 0; i < s.size(); i++)
+    {
+       for (int j = 0; j < s[i].size(); j++)
+       {
+            position p = s[i][j];
+            this->positions[p.first][p.second] = 3;
+       }
+    }
+}
+
+void Map::mapToFile(const char* filename)
+{
+    ofstream file;
+    file.open(filename);
+    for (int i = 0; i < this->positions.size(); i++)
+    {
+        for (int j = 0; j < this->positions[i].size(); j++)
+        {
+            file << this->positions[i][j];
+            file << " ";
+        }
+        if (i != this->positions.size()-1)
+        {
+            file << '\n';
+        }
+    }
+    file.close();
 }

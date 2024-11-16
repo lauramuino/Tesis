@@ -1,33 +1,35 @@
 #include <algorithm>
 #include <iostream>
 #include <cmath>
+#include <numeric>
+#include <ctime>
 #include "Solution.h"
 
-bool noEstaEn(path p, solution &s)
+bool corteEstaEnSolucion(path &cutA, solution &solucion)
 {
-    for (int i = 0; i < s.size(); i++)
+    int lastIndexOfCutA = cutA.size() - 1;
+    for (path cutB : solucion)
     {
-        bool notTheBegining = (p[0] != s[i][0]) && (p[p.size()-1] != s[i][0]);
-        int lastIndexOfSAti = s[i].size()-1;
-        bool notTheEnd = (p[0] != s[i][lastIndexOfSAti]) && (p[p.size()-1] != s[i][lastIndexOfSAti]);
-        if (notTheBegining && notTheEnd) {
-            return false;
+        int lastIndexOfCutB = cutB.size() - 1;
+        bool isTheSameCut = (cutA[0] == cutB[0]) && (cutA[lastIndexOfCutA] == cutB[lastIndexOfCutB]);
+        bool isReversedCut = (cutA[0] == cutB[lastIndexOfCutB]) && (cutA[lastIndexOfCutA] == cutB[0]);
+        if (isTheSameCut || isReversedCut) {
+            return true;
         }
     }
     
-    return true;
+    return false;
 }
 
 vector<path> cortesQueNoEstanEn(solution &s, Map &m) 
 {
-    vector<position> borders = m.getBorders();
     vector<path> cortes;
-    for (int i = 0; i < borders.size(); i++)
+    for (int i = 0; i < m.borders(); i++)
     {
-        for (int j = i+1; j < borders.size(); j++)
+        for (int j = i+1; j < m.borders(); j++)
         {
-            path nuevoCorte = m.getPathBetween(borders[i], borders[j]);
-            if (noEstaEn(nuevoCorte, s))
+            path nuevoCorte = m.getPathBetween(m.getBorderAt(i), m.getBorderAt(j));
+            if (!corteEstaEnSolucion(nuevoCorte, s))
             {
                 cortes.push_back(nuevoCorte);
             }      
@@ -50,18 +52,18 @@ bool caminosQueSeCruzan(path a, path b)
     return false;
 }
 
-bool noHayCruces(solution &s)
+bool noHayCruces(solution &s) //todo: no funciona como deberia
 {
     for (int i = 0; i < s.size(); i++)
     {
         for (int j = i+1; j < s.size(); j++)
         {
             if (caminosQueSeCruzan(s[i], s[j]))
-                return true;
+                return false;
         }
     }
     
-    return false;
+    return true;
 }
 
 vector<solution> getNeighbourhood(solution &s, Map &map)
@@ -144,4 +146,37 @@ solution tabuSearch(int maxIterations, int tabuListSize, Map &map, solution &ini
     }
  
     return bestSolution;
+}
+
+solution buildInitialSolution(Map &m)
+{
+    int nededCuts = m.resources()-1;
+    solution initialSolution;
+
+    //vector con lista de indices de ptos borde
+    vector<int> bordersIndex(m.borders());
+    //colocar numeros del 0 a m.borders-1
+    iota(bordersIndex.begin(), bordersIndex.end(), 0);
+    std::srand(std::time(0));
+
+    while (initialSolution.size() != nededCuts)
+    {
+        //tomar dos puntos bordes no usados
+        int random_pos = std::rand() % bordersIndex.size();
+        int random_index = bordersIndex[random_pos];
+
+        position x = m.getBorderAt(random_index);
+        bordersIndex.erase(bordersIndex.begin() + random_pos);
+
+        random_pos = std::rand() % bordersIndex.size();
+        random_index = bordersIndex[random_pos];
+        
+        position y = m.getBorderAt(random_index);
+        bordersIndex.erase(bordersIndex.begin() + random_pos);
+
+        path a = m.getPathBetween(x, y);
+        //todo: chequear que el camino sea valido
+        initialSolution.push_back(a);
+    }
+    return initialSolution;
 }

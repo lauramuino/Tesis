@@ -1,6 +1,7 @@
 #include <vector>
 #include <utility>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -19,11 +20,14 @@ class Map {
     Map(ifstream &);
     ~Map();
     bool isBorder(int i, int j);
+    int borders() {return borderPositions.size();}
+    position getBorderAt(int i) {return borderPositions[i];}
     int rows() {return totalRows;}
     int columns() {return totalColumns;}
     int resources() {return totalResources;}
     int at(int i, int j){return positions[i][j];}
-    vector<position> getBorders();
     vector<position> getWalkableNeighbours(position);
     path getPathBetween(position, position);
+    void drawSolution(vector<path>&);
+    void mapToFile(const char*);
 };

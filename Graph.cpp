@@ -8,9 +8,7 @@ Graph::~Graph() = default;
 
 Graph::Graph(Map &m)
 {
-    int nodeCount = 0;
-    vector<position> translation; //given a node number, get its corresponding position on the map
-    
+    totalNodes = 0;
     //initial structure, without neighbour data
     for (int i = 0; i < m.rows(); i++)
     {
@@ -19,29 +17,29 @@ Graph::Graph(Map &m)
             int value = m.at(i, j);
             if (isResource(value) || isWalkable(value))
             {
-                if (isResource(value)) resources.insert(nodeCount);
+                if (isResource(value)) resources.insert(totalNodes);
                 
                 position p =  make_pair(i, j);
-                translation.push_back(p); 
-                nodeCount++;
+                nodeToMapIndex.push_back(p); 
+                totalNodes++;
             }
         }
     }
-    nodeToMapIndex = translation;
-    totalNodes = nodeCount;
-     
+
     //filling with neighbour info
     for (int k = 0; k < totalNodes; k++)
     {
-        vector<position> neighbours = m.getWalkableNeighbours(translation[k]);
+        vector<int> aux;
+        vector<position> neighbours = m.getWalkableNeighbours(nodeToMapIndex[k]);
         for (position neighbour : neighbours)
         {
-            auto it = find(translation.begin(), translation.end(), neighbour);
-            if (it != std::end(translation)) {
-               int index = it - translation.begin();
-                adjacencyList[k].push_back(index);
+            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), neighbour);
+            if (it != std::end(nodeToMapIndex)) {
+               int index = it - nodeToMapIndex.begin();
+                aux.push_back(index);
             }
         }
+        adjacencyList.push_back(aux);
     }
 }
 
