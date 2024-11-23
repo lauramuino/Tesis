@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "Printing.h"
 
 Map::Map(ifstream & f) 
 {
@@ -131,19 +132,5 @@ void Map::drawSolution(vector<path> &s)
 
 void Map::mapToFile(const char* filename)
 {
-    ofstream file;
-    file.open(filename);
-    for (int i = 0; i < this->positions.size(); i++)
-    {
-        for (int j = 0; j < this->positions[i].size(); j++)
-        {
-            file << this->positions[i][j];
-            file << " ";
-        }
-        if (i != this->positions.size()-1)
-        {
-            file << '\n';
-        }
-    }
-    file.close();
+    print(this->positions, filename);
 }
