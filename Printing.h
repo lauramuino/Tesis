@@ -22,10 +22,17 @@ void getColor(int value, int& r, int& g, int& b) {
 void drawRectangle(image& output, int x, int y, int size, int r, int g, int b) {
     for (int i = y; i < y + size; ++i) {
         for (int j = x; j < x + size; ++j) {
-            if (i >= 0 && i < output.size() && j >= 0 && j < output[0].size()) {
-                output[i][j][0] = r;
-                output[i][j][1] = g;
-                output[i][j][2] = b;
+             if (i >= 0 && i < output.size() && j >= 0 && j < output[0].size()) {
+                if (i==y || i == y+size-1 || j==x || j==x+size-1)
+                {
+                    output[i][j][0] = 255;
+                    output[i][j][1] = 255;
+                    output[i][j][2] = 255;
+                } else{
+                    output[i][j][0] = r;
+                    output[i][j][1] = g;
+                    output[i][j][2] = b;
+                }
             }
         }
     }
