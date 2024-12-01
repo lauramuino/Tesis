@@ -10,11 +10,11 @@ typedef vector<position> path;
 
 class Map {
     vector<vector<int> > positions;
-    vector<pair<int,int> > borderPositions;
+    vector<position> borderPositions;
     int totalRows;
     int totalColumns;
     int totalResources;
-    bool inRange(pair<int,int>);
+    bool inRange(position);
 
     public:
     Map(ifstream &);
@@ -28,6 +28,5 @@ class Map {
     int at(int i, int j){return positions[i][j];}
     vector<position> getWalkableNeighbours(position);
     path getPathBetween(position, position);
-    void drawSolution(vector<path>&);
-    void mapToFile(const char*);
+    void drawSolution(vector<path>&, const char*);
 };

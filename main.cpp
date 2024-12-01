@@ -27,12 +27,10 @@ int main(int argc, char* argv[]) {
         int tabuListSize = atoi(argv[3]);
         solution bestSolution = tabuSearch(maxIterations, tabuListSize, mapa, initialSolution);
 
-        mapa.drawSolution(bestSolution);
-        
         string fileName = argv[1]; 
         fileName = fileName + "_solution";
         const char* newFileName = fileName.c_str();
-        mapa.mapToFile(newFileName);
+        mapa.drawSolution(bestSolution, newFileName);
     } else {
         cout << "Unable to open map file.";
         return EXIT_FAILURE;

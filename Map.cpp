@@ -118,19 +118,7 @@ path Map::getPathBetween(position x, position y) {
     return result;
 }
 
-void Map::drawSolution(vector<path> &s)
+void Map::drawSolution(vector<path> &s, const char* filename)
 {
-    for (int i = 0; i < s.size(); i++)
-    {
-       for (int j = 0; j < s[i].size(); j++)
-       {
-            position p = s[i][j];
-            this->positions[p.first][p.second] = 3;
-       }
-    }
-}
-
-void Map::mapToFile(const char* filename)
-{
-    print(this->positions, filename);
+    print(this->positions, s, filename);
 }
