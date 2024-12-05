@@ -109,6 +109,7 @@ vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
     makeCuts(s);
     vector<vector<int> > connectedComponents = getConnectedComponents();
     int meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
+    int countOfCC = connectedComponents.size();
     for (auto cc : connectedComponents) {
         meanArea += cc.size();
         int cantResources = 0;
@@ -128,7 +129,7 @@ vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
     }
 
     undoCuts(s);
-    return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources};
+    return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources, countOfCC};
 }
 
 vector<vector<int> > Graph::getConnectedComponents()

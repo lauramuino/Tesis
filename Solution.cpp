@@ -105,12 +105,61 @@ int objectiveFunction(solution &s, Graph &grafo)
     return leastSquaresArea + resourcesBalanced + averageCutSizes;
 }
 
-solution tabuSearch(int maxIterations, int tabuListSize, Map &map, solution &initialSolution)
+vector<int> getTwoRandomBorders(vector<int>& bordersIndex)
 {
-    solution bestSolution = initialSolution;
-    solution currentSolution = initialSolution;
-    vector<solution> tabu_list;
+    //choose index of pool, and remove it
+    int random_pos = std::rand() % bordersIndex.size();
+    int random_indexX = bordersIndex[random_pos];
+    bordersIndex.erase(bordersIndex.begin() + random_pos);
+    //repeat
+    random_pos = std::rand() % bordersIndex.size();
+    int random_indexY = bordersIndex[random_pos];
+    bordersIndex.erase(bordersIndex.begin() + random_pos);
+    //return both indexes
+    vector<int> result = {random_indexX, random_indexY};
+    return result;
+} 
+
+solution buildInitialSolution(Map &m, Graph& grafo)
+{
+    int nededCuts = m.resources()-1;
+    solution initialSolution;
+
+    //vector con lista de indices de ptos borde
+    vector<int> bordersIndex(m.borders());
+    //colocar numeros del 0 a m.borders-1
+    iota(bordersIndex.begin(), bordersIndex.end(), 0);
+    std::srand(std::time(0));
+
+    while (initialSolution.size() != nededCuts)
+    {
+        //obtain bordres matching those indexes
+        vector<int> indexes = getTwoRandomBorders(bordersIndex);
+        position x = m.getBorderAt(indexes[0]);
+        position y = m.getBorderAt(indexes[1]);
+        //form a path
+        path a = m.getPathBetween(x, y);
+        initialSolution.push_back(a);
+
+        //check if de new cut increases number of c.c
+        int countOfCC = grafo.getInfoOfCutsMadeBy(initialSolution)[3];
+        if (countOfCC != initialSolution.size() + 1)
+        {
+           initialSolution.pop_back();
+           bordersIndex.push_back(indexes[0]);
+           bordersIndex.push_back(indexes[1]);
+        }
+        
+    }
+    return initialSolution;
+}
+
+solution tabuSearch(int maxIterations, int tabuListSize, Map &map)
+{
     Graph grafo = Graph(map);
+    solution bestSolution = buildInitialSolution(map, grafo);
+    solution currentSolution = bestSolution;
+    vector<solution> tabu_list;
  
     for (int iter = 0; iter < maxIterations; iter++) {
         vector<solution> neighbours = getNeighbourhood(currentSolution, map);
@@ -146,37 +195,4 @@ solution tabuSearch(int maxIterations, int tabuListSize, Map &map, solution &ini
     }
  
     return bestSolution;
-}
-
-solution buildInitialSolution(Map &m)
-{
-    int nededCuts = m.resources()-1;
-    solution initialSolution;
-
-    //vector con lista de indices de ptos borde
-    vector<int> bordersIndex(m.borders());
-    //colocar numeros del 0 a m.borders-1
-    iota(bordersIndex.begin(), bordersIndex.end(), 0);
-    std::srand(std::time(0));
-
-    while (initialSolution.size() != nededCuts)
-    {
-        //tomar dos puntos bordes no usados
-        int random_pos = std::rand() % bordersIndex.size();
-        int random_index = bordersIndex[random_pos];
-
-        position x = m.getBorderAt(random_index);
-        bordersIndex.erase(bordersIndex.begin() + random_pos);
-
-        random_pos = std::rand() % bordersIndex.size();
-        random_index = bordersIndex[random_pos];
-        
-        position y = m.getBorderAt(random_index);
-        bordersIndex.erase(bordersIndex.begin() + random_pos);
-
-        path a = m.getPathBetween(x, y);
-        //todo: chequear que el camino sea valido
-        initialSolution.push_back(a);
-    }
-    return initialSolution;
 }
