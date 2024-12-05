@@ -38,21 +38,33 @@ vector<path> cortesQueNoEstanEn(solution &s, Map &m)
     return cortes;
 }
 
+bool positionsTouch(position a, position b)
+{
+    bool mismaFila = (a.first == b.first);
+    bool columnasContiguas = abs(a.second - b.second) == 1;
+    return mismaFila && columnasContiguas;
+}
+
 bool caminosQueSeCruzan(path a, path b)
 {
     for (int i = 0; i < a.size(); i++)
     {
         for (int j = 0; j < b.size(); j++)
         {
-            if (a[i] == b[j]) {
+            if (a[i] == b[j] ) {
                 return true;
             }
+            if (positionsTouch(a[i], b[j]) && i+1<a.size() && j+1<b.size() && positionsTouch(a[i+1], b[j+1]))
+            {
+                return true;
+            }
+            
         } 
     }
     return false;
 }
 
-bool noHayCruces(solution &s) //todo: no funciona como deberia
+bool noHayCruces(solution &s)
 {
     for (int i = 0; i < s.size(); i++)
     {
@@ -143,7 +155,7 @@ solution buildInitialSolution(Map &m, Graph& grafo)
 
         //check if de new cut increases number of c.c
         int countOfCC = grafo.getInfoOfCutsMadeBy(initialSolution)[3];
-        if (countOfCC != initialSolution.size() + 1)
+        if (countOfCC != initialSolution.size() + 1  && !noHayCruces(initialSolution))
         {
            initialSolution.pop_back();
            bordersIndex.push_back(indexes[0]);
