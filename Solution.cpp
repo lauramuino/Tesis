@@ -64,18 +64,18 @@ bool caminosQueSeCruzan(path a, path b)
     return false;
 }
 
-bool noHayCruces(solution &s)
+bool hayCruces(solution &s)
 {
     for (int i = 0; i < s.size(); i++)
     {
         for (int j = i+1; j < s.size(); j++)
         {
             if (caminosQueSeCruzan(s[i], s[j]))
-                return false;
+                return true;
         }
     }
     
-    return true;
+    return false;
 }
 
 vector<solution> getNeighbourhood(solution &s, Map &map)
@@ -89,7 +89,7 @@ vector<solution> getNeighbourhood(solution &s, Map &map)
         {
             solution newSolution = s; 
             newSolution[j] = cortes[i];
-            if (noHayCruces(newSolution))
+            if (!hayCruces(newSolution))
                 neighbours.push_back(newSolution);
         }
         
@@ -155,7 +155,7 @@ solution buildInitialSolution(Map &m, Graph& grafo)
 
         //check if de new cut increases number of c.c
         int countOfCC = grafo.getInfoOfCutsMadeBy(initialSolution)[3];
-        if (countOfCC != initialSolution.size() + 1  && !noHayCruces(initialSolution))
+        if (countOfCC != initialSolution.size() + 1  && hayCruces(initialSolution))
         {
            initialSolution.pop_back();
            bordersIndex.push_back(indexes[0]);
