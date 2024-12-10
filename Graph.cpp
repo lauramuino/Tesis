@@ -45,13 +45,10 @@ Graph::Graph(Map &m)
 
 void Graph::removeNeighbourAFromB(int a, int b)
 {
-    for (int i = 0; i < adjacencyList[b].size(); i++)
+    auto it = find(adjacencyList[b].begin(), adjacencyList[b].end(), a);
+    if (it != adjacencyList[b].end())
     {
-        auto it = find(adjacencyList[b].begin(), adjacencyList[b].end(), a);
-        if (it != adjacencyList[b].end())
-        {
-            adjacencyList[b].erase(it);
-        }
+        adjacencyList[b].erase(it);
     }
 }
 
