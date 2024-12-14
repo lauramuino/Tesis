@@ -81,10 +81,13 @@ int print(vector<vector<int> > &matrix, vector<vector<pair<int, int> > >& sol, s
 
     // Draw lines connecting positions of the solution
     for (size_t i = 0; i < sol.size(); ++i) {
-        pair<int,int> init = sol[i][0];
-        pair<int,int> end  = sol[i][sol[i].size() -1];
-        drawLine(output, init.second*cellSize + cellSize/2, init.first*cellSize + cellSize/2,
+        for (size_t j = 0; j < sol[i].size()-1; j++)
+        {
+            pair<int,int> init = sol[i][j];
+            pair<int,int> end  = sol[i][j+1];
+            drawLine(output, init.second*cellSize + cellSize/2, init.first*cellSize + cellSize/2,
                  end.second*cellSize + cellSize/2, end.first*cellSize + cellSize/2, 255, 0, 0);
+        }
     }
 
     // Save the image as a PPM file
