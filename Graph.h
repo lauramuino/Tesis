@@ -12,6 +12,7 @@ class Graph {
     vector<vector<int> > adjacencyList;
     vector<position> nodeToMapIndex; //given a node number, get its corresponding position on the map
     set<int> resources;
+    vector<pair<int, int> > removedCuts;
     void makeCuts(solution &s);
     void undoCuts(solution &s);
     void removeEdge(int, int);

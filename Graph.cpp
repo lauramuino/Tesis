@@ -58,6 +58,19 @@ void Graph::removeEdge(int a, int b)
     removeNeighbourAFromB(b, a);
 }
 
+void removeDiagonal(position p_a, position p_b, int a, int b)
+{
+    bool sameHorizontal = p_a.first == p_b.first;
+    bool sameVertical = p_a.second == p_b.second;
+
+    if (!sameHorizontal && !sameVertical)
+    {
+        /* it's a diagonal, should remove also de inverted one */
+
+    }
+    
+}
+
 void Graph::makeCuts(solution &s)
 {
     for (int i = 0; i < s.size(); i++)
@@ -67,12 +80,36 @@ void Graph::makeCuts(solution &s)
             auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j]);
             if (it != nodeToMapIndex.end())
             {
+                pair init = s[i][j]; //coordenadas en el mapa
+                pair end = s[i][j+1];
+
                 int a = it - nodeToMapIndex.begin();
-                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j+1]);
+                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), end);
                 if (it != nodeToMapIndex.end())
                 {
                     int b = it - nodeToMapIndex.begin();
                     removeEdge(a, b);
+                    removedCuts.push_back(make_pair(a, b));
+                   // remove inverse diagonal if there's one
+                    bool sameHorizontal = init.first == end.first;
+                    bool sameVertical = init.second == end.second;
+                    if (!sameHorizontal && !sameVertical)
+                    {
+                        pair diagInit = make_pair(init.first, end.second);
+                        pair diagEnd = make_pair(end.first, init.second);
+                        it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), diagInit);
+                        if (it != nodeToMapIndex.end())
+                        {
+                            int c = it - nodeToMapIndex.begin();
+                            it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), diagEnd);
+                            if (it != nodeToMapIndex.end())
+                            {
+                                int d = it - nodeToMapIndex.begin();
+                                removeEdge(c, d);
+                                removedCuts.push_back(make_pair(c, d));
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -81,24 +118,14 @@ void Graph::makeCuts(solution &s)
 
 void Graph::undoCuts(solution &s)
 {
-    for (int i = 0; i < s.size(); i++)
+    for (auto cut : removedCuts)
     {
-        for (int j = 0; j < s[i].size()-1; j++)
-        {
-             auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j]);
-            if (it != nodeToMapIndex.end())
-            {
-                int a = it - nodeToMapIndex.begin();
-                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j+1]);
-                if (it != nodeToMapIndex.end())
-                {
-                    int b = it - nodeToMapIndex.begin();
-                    adjacencyList[a].push_back(b);
-                    adjacencyList[b].push_back(a);
-                }
-            }
-        }
+        int a = cut.first;
+        int b = cut.second;
+        adjacencyList[a].push_back(b);
+        adjacencyList[b].push_back(a);
     }
+    removedCuts.clear();
 }
 
 vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
