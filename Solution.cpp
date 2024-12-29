@@ -5,6 +5,19 @@
 #include <ctime>
 #include "Solution.h"
 
+void printSolution(solution& s)
+{
+    for (auto path: s)
+    {
+        for (auto position: path)
+        {
+            cout << "(" << position.first << ", " << position.second << ") ";
+        }
+        cout  << endl;
+    }
+    cout << endl;
+}
+
 bool corteEstaEnSolucion(path &cutA, solution &solucion)
 {
     int lastIndexOfCutA = cutA.size() - 1;
@@ -170,6 +183,9 @@ solution tabuSearch(int maxIterations, int tabuListSize, Map &map)
 {
     Graph grafo = Graph(map);
     solution bestSolution = buildInitialSolution(map, grafo);
+    cout << "Initial solution: " << endl; 
+    printSolution(bestSolution);
+
     solution currentSolution = bestSolution;
     vector<solution> tabu_list;
  
@@ -206,5 +222,7 @@ solution tabuSearch(int maxIterations, int tabuListSize, Map &map)
         }
     }
  
+    cout << "Best solution found: " << endl;
+    printSolution(bestSolution);
     return bestSolution;
 }

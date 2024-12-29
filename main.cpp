@@ -6,19 +6,6 @@
 
 using namespace std;
 
-void printSolution(solution& s)
-{
-    for (auto path: s)
-    {
-        for (auto position: path)
-        {
-            cout << "(" << position.first << ", " << position.second << ") ";
-        }
-        cout  << endl;
-    }
-    cout << endl;
-}
-
 int main(int argc, char* argv[]) {
 
     if (argc < 3) {
@@ -39,10 +26,8 @@ int main(int argc, char* argv[]) {
         int tabuListSize = atoi(argv[3]);
         solution bestSolution = tabuSearch(maxIterations, tabuListSize, mapa);
 
-        printSolution(bestSolution);
-
         string fileName = argv[1]; 
-        fileName = fileName + "_solution";
+        fileName = fileName + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution";
         const char* newFileName = fileName.c_str();
         mapa.drawSolution(bestSolution, newFileName);
     } else {
