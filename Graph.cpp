@@ -43,75 +43,42 @@ Graph::Graph(Map &m)
     }
 }
 
-void Graph::removeNeighbourAFromB(int a, int b)
-{
-    auto it = find(adjacencyList[b].begin(), adjacencyList[b].end(), a);
-    if (it != adjacencyList[b].end())
-    {
-        adjacencyList[b].erase(it);
-    }
-}
-
 void Graph::removeEdge(int a, int b)
 {
-    removeNeighbourAFromB(a, b);
-    removeNeighbourAFromB(b, a);
+    auto itb = find(adjacencyList[b].begin(), adjacencyList[b].end(), a);
+    if (itb != adjacencyList[b].end())
+    {
+        adjacencyList[b].erase(itb);
+    }
+    auto ita = find(adjacencyList[a].begin(), adjacencyList[a].end(), b);
+    if (ita != adjacencyList[a].end())
+    {
+        adjacencyList[a].erase(ita);
+    }
 }
 
-void removeDiagonal(position p_a, position p_b, int a, int b)
+void Graph::removeAllEdges(position p)
 {
-    bool sameHorizontal = p_a.first == p_b.first;
-    bool sameVertical = p_a.second == p_b.second;
-
-    if (!sameHorizontal && !sameVertical)
+    auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), p);
+    if (it!=nodeToMapIndex.end())
     {
-        /* it's a diagonal, should remove also de inverted one */
-
+        int index = it - nodeToMapIndex.begin();
+        vector<int> aux = adjacencyList[index];
+        for (int neighbour : aux)
+        {
+            removeEdge(index, neighbour);
+            removedCuts.push_back(make_pair(index, neighbour));
+        }
     }
-    
 }
 
 void Graph::makeCuts(solution &s)
 {
-    for (int i = 0; i < s.size(); i++)
+    for (path cut : s)
     {
-        for (int j = 0; j < s[i].size()-1; j++)
+        for (position p : cut)
         {
-            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), s[i][j]);
-            if (it != nodeToMapIndex.end())
-            {
-                pair init = s[i][j]; //coordenadas en el mapa
-                pair end = s[i][j+1];
-
-                int a = it - nodeToMapIndex.begin();
-                it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), end);
-                if (it != nodeToMapIndex.end())
-                {
-                    int b = it - nodeToMapIndex.begin();
-                    removeEdge(a, b);
-                    removedCuts.push_back(make_pair(a, b));
-                   // remove inverse diagonal if there's one
-                    bool sameHorizontal = init.first == end.first;
-                    bool sameVertical = init.second == end.second;
-                    if (!sameHorizontal && !sameVertical)
-                    {
-                        pair diagInit = make_pair(init.first, end.second);
-                        pair diagEnd = make_pair(end.first, init.second);
-                        it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), diagInit);
-                        if (it != nodeToMapIndex.end())
-                        {
-                            int c = it - nodeToMapIndex.begin();
-                            it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), diagEnd);
-                            if (it != nodeToMapIndex.end())
-                            {
-                                int d = it - nodeToMapIndex.begin();
-                                removeEdge(c, d);
-                                removedCuts.push_back(make_pair(c, d));
-                            }
-                        }
-                    }
-                }
-            }
+            removeAllEdges(p);
         }
     }
 }
@@ -128,10 +95,47 @@ void Graph::undoCuts(solution &s)
     removedCuts.clear();
 }
 
+void Graph::filterPathConnectedComponents(solution s, vector<vector<int> > &connectsdComponents)
+{
+    vector<int> ccToDelete;
+    //recorro todos los caminos
+    for (auto is = s.begin(); is != s.end(); is++)
+    {
+        path p = *is;
+        //para cada camino, recorro sus posiciones (del map)
+        for (auto ip = p.begin(); ip != p.end(); ip++)
+        {
+            position pos = *ip;
+            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), pos);
+            //obtain index of position in the nodeToMapIndex array
+            int nodeNumber = it - nodeToMapIndex.begin();
+            ccToDelete.push_back(nodeNumber);
+        }
+    }
+
+    //foreach element of ccTodelete, find its aparition in conectsdComponents and delete it
+    for (int nodeNumber : ccToDelete)
+    {
+        for (auto it = connectsdComponents.begin(); it != connectsdComponents.end(); it++)
+        {
+            vector<int> cc = *it;
+            auto it2 = find(cc.begin(), cc.end(), nodeNumber);
+            if (it2 != cc.end())
+            {
+                connectsdComponents.erase(it);
+                break;
+            }
+        }
+    }
+    
+}
+
 vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
 {
     makeCuts(s);
     vector<vector<int> > connectedComponents = getConnectedComponents();
+    filterPathConnectedComponents(s, connectedComponents);
+
     int meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
     int countOfCC = connectedComponents.size();
     for (auto cc : connectedComponents) {
@@ -144,7 +148,7 @@ vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
         if (cantResources == 0) ccWithoutResources++;
         
     }
-    meanArea = meanArea / connectedComponents.size();
+    meanArea = meanArea / countOfCC;
 
     int leastSquaresArea = 0;
     for (auto cc : connectedComponents)
@@ -153,6 +157,7 @@ vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
     }
 
     undoCuts(s);
+    //resto los cortes del conteo de componentes conexas
     return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources, countOfCC};
 }
 

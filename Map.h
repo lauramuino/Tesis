@@ -22,6 +22,7 @@ class Map {
     bool isBorder(int i, int j);
     int borders() {return borderPositions.size();}
     position getBorderAt(int i) {return borderPositions[i];}
+    vector<position> getBorders() {return borderPositions;}
     int rows() {return totalRows;}
     int columns() {return totalColumns;}
     int resources() {return totalResources;}

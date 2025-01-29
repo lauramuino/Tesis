@@ -10,14 +10,15 @@ typedef vector<path> solution;
 class Graph {
     int totalNodes;
     vector<vector<int> > adjacencyList;
-    vector<position> nodeToMapIndex; //given a node number, get its corresponding position on the map
+    vector<position> nodeToMapIndex; //indexes are node numbers, elements are map positions
     set<int> resources;
     vector<pair<int, int> > removedCuts;
     void makeCuts(solution &s);
     void undoCuts(solution &s);
-    void removeEdge(int, int);
-    void removeNeighbourAFromB(int a, int b);
+    void removeAllEdges(position);
+    void removeEdge(int a, int b);
     vector<vector<int> > getConnectedComponents();
+    void filterPathConnectedComponents(solution s, vector<vector<int> > &connectsdComponents);
 
     public:
     Graph(Map &m);
