@@ -213,19 +213,29 @@ solution getInitialSolutionDoingBacktracking(Map &m, Graph &grafo)
     return s;
 }
 
+solution getInitialSolution(string initialSolPath, Map &m, Graph &g)
+{
+    solution bestSolution;
+    string path = std::filesystem::current_path().string().c_str();
+    
+    if (initialSolPath.empty())
+    {
+        bestSolution = getInitialSolutionDoingBacktracking(m, g);
+        path.append("/output/initialSolutionBacktracking");
+    } else {
+        bestSolution = getInitialSolutionFromFile(initialSolPath.c_str());
+        path.append("/output/initialSolutionManual");
+    }
+
+    m.drawSolution(bestSolution, path.substr(0, path.size()).c_str());
+
+    return bestSolution;
+}
+
 solution tabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath)
 {
     Graph grafo = Graph(map);
-    solution bestSolution;
-    if (initialSolPath.empty())
-    {
-        bestSolution = getInitialSolutionDoingBacktracking(map, grafo);
-        initialSolPath = std::filesystem::current_path().string().c_str();
-        initialSolPath.append("maps/manual_initial_solutions/initialSolutionBacktracking.txt");
-    } else {
-        bestSolution = getInitialSolutionFromFile(initialSolPath.c_str());
-    }
-    map.drawSolution(bestSolution, initialSolPath.substr(0, initialSolPath.size()-4).c_str());
+    solution bestSolution = getInitialSolution(initialSolPath, map, grafo);
 
     solution currentSolution = bestSolution;
     vector<solution> tabu_list;

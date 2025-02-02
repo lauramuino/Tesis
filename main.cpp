@@ -3,8 +3,17 @@
 #include "Solution.h"
 #include <cstring>
 #include <string>
+#include <filesystem>
 
 using namespace std;
+
+string getOutputFilename(string inputFilePath, int maxIterations, int tabuListSize)
+{
+    string mapName = inputFilePath.substr(inputFilePath.find_last_of("/"), inputFilePath.size() -1);
+    string path = std::filesystem::current_path().string() + "/output" + mapName;
+    string fileName = path + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution";
+    return fileName;
+}
 
 int main(int argc, char* argv[]) {
 
@@ -31,10 +40,8 @@ int main(int argc, char* argv[]) {
         try
         {
             solution bestSolution = tabuSearch(maxIterations, tabuListSize, mapa, initialSolPath);
-            string fileName = argv[1]; 
-            fileName = fileName + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution";
-            const char* newFileName = fileName.c_str();
-            mapa.drawSolution(bestSolution, newFileName);
+            auto outputFilename = getOutputFilename(argv[1], maxIterations, tabuListSize);
+            mapa.drawSolution(bestSolution, outputFilename.c_str());
         }
         catch(const std::exception& e)
         {
