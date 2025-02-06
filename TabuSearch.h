@@ -23,5 +23,6 @@ class TabuSearch {
         bool caminosQueSeCruzan(path a, path b);
         void backtracking(solution &s, vector<path> &cuts, int cutsNeeded);
         void printSolution(solution& s);
-        bool hayCruces(solution &s);
+        bool hayCrucesOPosicionesNoCaminables(solution &s);
+        bool hayPosicionesNoCaminables(path& cut);
 };

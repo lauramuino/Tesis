@@ -79,10 +79,25 @@ bool TabuSearch::caminosQueSeCruzan(path a, path b)
     return false;
 }
 
-bool TabuSearch::hayCruces(solution &s)
+bool TabuSearch::hayPosicionesNoCaminables(path &cut)
+{
+    for (int i = 0; i < cut.size(); i++)
+    {
+        if (mapa.at(cut[i].first, cut[i].second) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool TabuSearch::hayCrucesOPosicionesNoCaminables(solution &s) //todo: rename to no joints and no 0's or 2's postiions
 {
     for (int i = 0; i < s.size(); i++)
     {
+        if (hayPosicionesNoCaminables(s[i]))
+            return true;
+
         for (int j = i+1; j < s.size(); j++)
         {
             if (caminosQueSeCruzan(s[i], s[j]))
@@ -104,7 +119,7 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
         {
             solution newSolution = s; 
             newSolution[j] = cortes[i];
-            if (!hayCruces(newSolution))
+            if (!hayCrucesOPosicionesNoCaminables(newSolution))
                 neighbours.push_back(newSolution);
         }
         
@@ -134,21 +149,19 @@ int TabuSearch::objectiveFunction(solution &s)
 
 bool TabuSearch::esSolucionParcialValida(solution &s)
 {
-    if (hayCruces(s))
-    {
+    if (hayCrucesOPosicionesNoCaminables(s))
         return false;
-    }
+    
     vector<int> info = grafo.getInfoOfCutsMadeBy(s);
     int ccWithoutResources = info[2];
     int countOfCC = info[3];
+    
     if (countOfCC != s.size() + 1)
-    {
         return false;
-    }
+
     if (ccWithoutResources > 0)
-    {
         return false;
-    }
+
     return true;
 }
 
