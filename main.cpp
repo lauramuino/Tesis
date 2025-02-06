@@ -1,6 +1,6 @@
 #include <iostream>
 #include <utility>
-#include "Solution.h"
+#include "TabuSearch.h"
 #include <cstring>
 #include <string>
 #include <filesystem>
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
 
         try
         {
-            solution bestSolution = tabuSearch(maxIterations, tabuListSize, mapa, initialSolPath);
+            solution bestSolution = TabuSearch(maxIterations, tabuListSize, mapa, initialSolPath).run();
             auto outputFilename = getOutputFilename(argv[1], maxIterations, tabuListSize);
             mapa.drawSolution(bestSolution, outputFilename.c_str());
         }
