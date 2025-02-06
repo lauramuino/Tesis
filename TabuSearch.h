@@ -10,7 +10,7 @@ class TabuSearch {
         Graph grafo;
         string initialSolPath;
 
-        int objectiveFunction(solution &s);
+        double objectiveFunction(solution &s);
         
         solution getInitialSolution(string initialSolPath);
         solution getInitialSolutionDoingBacktracking();

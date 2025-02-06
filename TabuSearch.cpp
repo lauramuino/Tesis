@@ -91,7 +91,7 @@ bool TabuSearch::hayPosicionesNoCaminables(path &cut)
     return false;
 }
 
-bool TabuSearch::hayCrucesOPosicionesNoCaminables(solution &s) //todo: rename to no joints and no 0's or 2's postiions
+bool TabuSearch::hayCrucesOPosicionesNoCaminables(solution &s)
 {
     for (int i = 0; i < s.size(); i++)
     {
@@ -128,21 +128,21 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
     return neighbours;
 }
 
-int TabuSearch::objectiveFunction(solution &s)
+double TabuSearch::objectiveFunction(solution &s)
 {
-    int averageCutSizes = 0;
-    for (int i = 0; i < s.size(); i++)
+    double averageCutSizes = 0;
+    for (path p : s)
     {
-        averageCutSizes += s[i].size();
+        averageCutSizes += (double) p.size();
     }
     averageCutSizes = averageCutSizes / s.size();
     
-    vector<int> info = grafo.getInfoOfCutsMadeBy(s);
-    int leastSquaresArea = info[0];
-    int highestResourcesOnSameCC = info[1] ;
-    int ccWithoutResources = info[2];
+    vector<double> info = grafo.getInfoOfCutsMadeBy(s);
+    double leastSquaresArea = info[0];
+    double highestResourcesOnSameCC = info[1];
+    double ccWithoutResources = info[2];
 
-    int resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
+    double resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
 
     return leastSquaresArea + resourcesBalanced + averageCutSizes;
 }
@@ -152,9 +152,9 @@ bool TabuSearch::esSolucionParcialValida(solution &s)
     if (hayCrucesOPosicionesNoCaminables(s))
         return false;
     
-    vector<int> info = grafo.getInfoOfCutsMadeBy(s);
-    int ccWithoutResources = info[2];
-    int countOfCC = info[3];
+    vector<double> info = grafo.getInfoOfCutsMadeBy(s);
+    double ccWithoutResources = info[2];
+    double countOfCC = info[3];
     
     if (countOfCC != s.size() + 1)
         return false;

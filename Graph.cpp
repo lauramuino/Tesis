@@ -130,17 +130,17 @@ void Graph::filterPathConnectedComponents(solution s, vector<vector<int> > &conn
     
 }
 
-vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
+vector<double> Graph::getInfoOfCutsMadeBy(solution &s)
 {
     makeCuts(s);
     vector<vector<int> > connectedComponents = getConnectedComponents();
     filterPathConnectedComponents(s, connectedComponents);
 
-    int meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
-    int countOfCC = connectedComponents.size();
+    double meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
+    double countOfCC = connectedComponents.size();
     for (auto cc : connectedComponents) {
-        meanArea += cc.size();
-        int cantResources = 0;
+        meanArea += (double)cc.size();
+        double cantResources = 0;
         for (int c : cc) {
             if (resources.find(c) != resources.end()) cantResources++;
         }
@@ -150,10 +150,10 @@ vector<int> Graph::getInfoOfCutsMadeBy(solution &s)
     }
     meanArea = meanArea / countOfCC;
 
-    int leastSquaresArea = 0;
+    double leastSquaresArea = 0;
     for (auto cc : connectedComponents)
     {
-        leastSquaresArea += pow(meanArea-cc.size(), 2);
+        leastSquaresArea += pow(meanArea-cc.size(), 2.0);
     }
 
     undoCuts(s);

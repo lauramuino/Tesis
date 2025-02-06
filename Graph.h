@@ -25,5 +25,5 @@ class Graph {
     ~Graph();
     bool isResource(int v){return v == 2;}
     bool isWalkable(int v){return v == 1;}
-    vector<int> getInfoOfCutsMadeBy(solution &s);
+    vector<double> getInfoOfCutsMadeBy(solution &s);
 };
