@@ -41,7 +41,7 @@ vector<path> TabuSearch::cortesQueNoEstanEn(solution &s)
     vector<path> cortes;
     for (int i = 0; i < mapa.borders(); i++)
     {
-        for (int j = i+1; j < mapa.borders(); j++)
+        for (int j = 0; j < mapa.borders(); j++)
         {
             path nuevoCorte = mapa.getPathBetween(mapa.getBorderAt(i), mapa.getBorderAt(j));
             if (!corteEstaEnSolucion(nuevoCorte, s))
