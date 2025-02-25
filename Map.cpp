@@ -1,3 +1,4 @@
+#include <set>
 #include "Map.h"
 #include "Printing.h"
 
@@ -24,13 +25,16 @@ Map::Map(ifstream & f)
     totalRows = row;
     totalResources = resources;
     
-    //se completa info sobre bordes
+    //se completa info sobre bordes y resources
     for (int i = 0; i < positions.size(); i++)
     {
         for (int j = 0; j < positions[i].size(); j++)
         {
             if(isBorder(i, j) && positions[i][j] != 2) {
                 borderPositions.push_back(make_pair(i,j));
+            }
+            if(positions[i][j] == 2) {
+                resourcesPositions.push_back(make_pair(i,j));
             }
         }
     }
@@ -121,4 +125,43 @@ path Map::getPathBetween(position x, position y) {
 void Map::drawSolution(vector<path> &s, const char* filename)
 {
     print(this->positions, s, filename);
+}
+
+vector<vector<position> > Map::getResourceClusters() {
+    vector<vector<int> > distances;
+    int median = 0;
+
+    for (int i = 0; i < resources(); i++) {
+        vector<int> distances_i;
+        for (int j = i+1; j < resources(); j++) {
+            path p = getPathBetween(getResources()[i], getResources()[j]);
+            int distance = p.size();
+            distances_i.push_back(distance);
+            median += distance;
+        }
+        distances.push_back(distances_i);
+    }
+
+    median = median / (resources() * (resources() - 1) / 2);
+   
+    //using the median as threshold, classify resources as clusters
+    vector<vector<position> > resourceClusters;
+    set<int> visitedResources;
+    
+    for (int i = 0; i < distances.size(); i++) {
+        vector<position> cluster;
+        cluster.push_back(getResources()[i]);
+        visitedResources.insert(i);
+        for (int j = i+1; j < distances[i].size(); j++) {
+            if (visitedResources.find(j) != visitedResources.end()) {
+                continue;
+            }
+            if (distances[i][j] <= median) {
+                cluster.push_back(getResources()[j]);
+            }
+        }
+        resourceClusters.push_back(cluster);
+    }
+
+    return resourceClusters;
 }

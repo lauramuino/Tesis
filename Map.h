@@ -11,6 +11,7 @@ typedef vector<position> path;
 class Map {
     vector<vector<int> > positions;
     vector<position> borderPositions;
+    vector<position> resourcesPositions;
     int totalRows;
     int totalColumns;
     int totalResources;
@@ -23,6 +24,7 @@ class Map {
     int borders() {return borderPositions.size();}
     position getBorderAt(int i) {return borderPositions[i];}
     vector<position> getBorders() {return borderPositions;}
+    vector<position> getResources() {return resourcesPositions;}
     int rows() {return totalRows;}
     int columns() {return totalColumns;}
     int resources() {return totalResources;}
@@ -30,4 +32,5 @@ class Map {
     vector<position> getWalkableNeighbours(position);
     path getPathBetween(position, position);
     void drawSolution(vector<path>&, const char*);
+    vector<vector<position> > getResourceClusters();
 };
