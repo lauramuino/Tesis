@@ -117,10 +117,17 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
     {
         for (int j = 0; j < s.size(); j++)
         {
+            //interchanging cuts
             solution newSolution = s; 
             newSolution[j] = cortes[i];
             if (!hayCrucesOPosicionesNoCaminables(newSolution))
                 neighbours.push_back(newSolution);
+            
+            //reducing cuts
+            solution newSolution2 = s;
+            newSolution2.erase(newSolution2.begin() + j);
+            if (!hayCrucesOPosicionesNoCaminables(newSolution2))
+                neighbours.push_back(newSolution2);
         }
         
     }
@@ -155,9 +162,6 @@ bool TabuSearch::esSolucionParcialValida(solution &s)
     vector<double> info = grafo.getInfoOfCutsMadeBy(s);
     double ccWithoutResources = info[2];
     double countOfCC = info[3];
-    
-    if (countOfCC != s.size() + 1)
-        return false;
 
     if (ccWithoutResources > 0)
         return false;
