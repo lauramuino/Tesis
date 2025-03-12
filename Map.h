@@ -16,6 +16,7 @@ class Map {
     int totalColumns;
     int totalResources;
     bool inRange(position);
+    vector<vector<position> > getResourceClusters();
 
     public:
     Map(ifstream &);
@@ -32,5 +33,4 @@ class Map {
     vector<position> getWalkableNeighbours(position);
     path getPathBetween(position, position);
     void drawSolution(vector<path>&, const char*);
-    vector<vector<position> > getResourceClusters();
 };

@@ -7,7 +7,7 @@
 
 TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)) {}
 
-void TabuSearch::printSolution(solution& s)
+void TabuSearch::writeSolution(solution& s)
 {
     for (auto path: s)
     {
@@ -292,6 +292,6 @@ solution TabuSearch::run()
     }
  
     cout << "Best solution found: " << endl;
-    printSolution(bestSolution);
+    writeSolution(bestSolution);
     return bestSolution;
 }

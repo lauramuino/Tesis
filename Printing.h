@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
@@ -58,7 +59,7 @@ void drawLine(image& output, int x1, int y1, int x2, int y2, int r, int g, int b
     }
 }
 
-int print(vector<vector<int> > &matrix, vector<vector<pair<int, int> > >& sol, string fileName) {
+int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resources, vector<vector<pair<int, int> > >& sol, string fileName) {
 
     // Image parameters
     const int cellSize = 50; // Size of each square
@@ -71,10 +72,36 @@ int print(vector<vector<int> > &matrix, vector<vector<pair<int, int> > >& sol, s
     image output(imgHeight, std::vector<std::vector<int>>(imgWidth, std::vector<int>(3, 255)));
 
     // Draw the matrix
+    int rv = 116, gv = 38, bv = 231; //violet
+    int rp = 242, gp = 45, bp = 187; //pink
+    
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int r, g, b;
-            getColor(matrix[i][j], r, g, b);
+            int cliqueIndex = -1;
+            for (int cl = 0; cl < resources.size(); cl++)
+            {
+                auto it = find(resources[cl].begin(), resources[cl].end(), make_pair(i, j));
+                if (it != std::end(resources[cl])) {
+                    cliqueIndex = cl;
+                }
+            }
+            if (cliqueIndex != -1)
+            {
+                if (cliqueIndex %2 == 0)
+                {
+                    r = rv;
+                    g = gv;
+                    b = bv;
+                } else {
+                    r = rp;
+                    g = gp;
+                    b = bp;
+                }
+            } else {
+                getColor(matrix[i][j], r, g, b);
+            }
+
             drawRectangle(output, j * cellSize, i * cellSize, cellSize, r, g, b);
         }
     }

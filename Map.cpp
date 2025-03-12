@@ -124,7 +124,8 @@ path Map::getPathBetween(position x, position y) {
 
 void Map::drawSolution(vector<path> &s, const char* filename)
 {
-    print(this->positions, s, filename);
+    auto resourceClusters = getResourceClusters();
+    print(this->positions, resourceClusters, s, filename);
 }
 
 vector<vector<position> > Map::getResourceClusters() {
