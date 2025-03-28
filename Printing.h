@@ -11,10 +11,10 @@ typedef vector<vector<vector<int> > > image;
 // Function to map matrix values to colors
 void getColor(int value, int& r, int& g, int& b) {
     switch (value) {
-        case 0: r = 105; g = 105; b = 105; break; // grey for non-wakable
-        case 1: r = 0;   g = 0;   b = 255; break; // blue wakable/buildable
-        case 2: r = 0;   g = 255; b = 0;   break; // green resourses
-        default: r = 0;  g = 0;   b = 0;   break; // Black
+        case 0:  r = 105;  g = 105;  b = 105;  break; // grey for non-wakable
+        case 1:  r = 0;    g = 0;    b = 0;    break; // black wakable/buildable
+        case 2:  r = 0;    g = 255;  b = 0;    break; // green resourses
+        default: r = 255;  g = 255;  b = 255;  break; // white should never happen
     }
 }
 
@@ -59,7 +59,39 @@ void drawLine(image& output, int x1, int y1, int x2, int y2, int r, int g, int b
     }
 }
 
-int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resources, vector<vector<pair<int, int> > >& sol, string fileName) {
+// Function to convert HSV to RGB
+void HSVtoRGB(float h, float s, float v, int &r, int &g, int &b) {
+    float c = v * s;
+    float x = c * (1 - fabs(fmod(h * 6, 2) - 1));
+    float m = v - c;
+    
+    float r1, g1, b1;
+    
+    if (h < 1.0/6)      { r1 = c, g1 = x, b1 = 0; }
+    else if (h < 2.0/6) { r1 = x, g1 = c, b1 = 0; }
+    else if (h < 3.0/6) { r1 = 0, g1 = c, b1 = x; }
+    else if (h < 4.0/6) { r1 = 0, g1 = x, b1 = c; }
+    else if (h < 5.0/6) { r1 = x, g1 = 0, b1 = c; }
+    else                { r1 = c, g1 = 0, b1 = x; }
+    
+    r = static_cast<int>((r1 + m) * 255);
+    g = static_cast<int>((g1 + m) * 255);
+    b = static_cast<int>((b1 + m) * 255);
+}
+
+// Function to generate n distinct RGB colors
+vector<vector<int>> generateDistinctColors(int n) {
+    vector<vector<int>> colors;
+    for (int i = 0; i < n; i++) {
+        float hue = static_cast<float>(i) / n; // Evenly spaced hues
+        int r, g, b;
+        HSVtoRGB(hue, 1.0, 1.0, r, g, b);
+        colors.push_back({r, g, b});
+    }
+    return colors;
+}
+
+int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resourceClusters, vector<vector<pair<int, int> > >& sol, string fileName) {
 
     // Image parameters
     const int cellSize = 50; // Size of each square
@@ -67,37 +99,29 @@ int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resources
     const int cols = matrix[0].size();
     const int imgWidth = cols * cellSize;
     const int imgHeight = rows * cellSize;
+    auto colors = generateDistinctColors(resourceClusters.size());
 
     // Create an empty image (RGB)
     image output(imgHeight, std::vector<std::vector<int>>(imgWidth, std::vector<int>(3, 255)));
 
     // Draw the matrix
-    int rv = 116, gv = 38, bv = 231; //violet
-    int rp = 242, gp = 45, bp = 187; //pink
-    
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             int r, g, b;
             int cliqueIndex = -1;
-            for (int cl = 0; cl < resources.size(); cl++)
+            for (int cl = 0; cl < resourceClusters.size(); cl++)
             {
-                auto it = find(resources[cl].begin(), resources[cl].end(), make_pair(i, j));
-                if (it != std::end(resources[cl])) {
+                auto it = find(resourceClusters[cl].begin(), resourceClusters[cl].end(), make_pair(i, j));
+                if (it != std::end(resourceClusters[cl])) {
                     cliqueIndex = cl;
+                    break;
                 }
             }
             if (cliqueIndex != -1)
             {
-                if (cliqueIndex %2 == 0)
-                {
-                    r = rv;
-                    g = gv;
-                    b = bv;
-                } else {
-                    r = rp;
-                    g = gp;
-                    b = bp;
-                }
+                r = colors[cliqueIndex][0];
+                g = colors[cliqueIndex][1]; 
+                b = colors[cliqueIndex][2];
             } else {
                 getColor(matrix[i][j], r, g, b);
             }

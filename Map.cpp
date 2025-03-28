@@ -38,6 +38,9 @@ Map::Map(ifstream & f)
             }
         }
     }
+
+    //se calculan los clusters de recursos dentro del mapa
+    getResourceClusters();
 }
 
 Map::~Map() = default;
@@ -103,8 +106,10 @@ path Map::getPathBetween(position x, position y) {
 
     while (x != y ) {
 
-        if (this->inRange(x)) {
+        if (this->inRange(x) && !isUnbuildable(x)) {
             result.push_back(x);
+        } else {
+            return path();
         }
 
         int e2 = 2 * err;
@@ -124,45 +129,64 @@ path Map::getPathBetween(position x, position y) {
 
 void Map::drawSolution(vector<path> &s, const char* filename)
 {
-    auto resourceClusters = getResourceClusters();
-    print(this->positions, resourceClusters, s, filename);
+    print(this->positions, this->resourceClusters, s, filename);
 }
 
-vector<vector<position> > Map::getResourceClusters() {
+void Map::getResourceClusters() {
     vector<vector<int> > distances;
-    int median = 0;
-
+    int mean = 0;
+    int countOfDistances = 0;
     for (int i = 0; i < resources(); i++) {
         vector<int> distances_i;
         for (int j = i+1; j < resources(); j++) {
             path p = getPathBetween(getResources()[i], getResources()[j]);
-            int distance = p.size();
+            int distance = p.size() == 0 ? -1 : p.size();
             distances_i.push_back(distance);
-            median += distance;
+            if (distance != -1)
+            {
+                mean += distance;
+                countOfDistances++;
+            }
         }
         distances.push_back(distances_i);
     }
+    mean = mean / countOfDistances;
 
-    median = median / (resources() * (resources() - 1) / 2);
+    // int variance = 0;
+    // for (int i = 0; i < distances.size(); i++) {
+    //     for (int j = 0; j < distances[i].size(); j++) {
+    //         if (distances[i][j] != -1) {
+    //             variance += pow(distances[i][j] - mean, 2);
+    //         }
+    //     }
+    // }
+    // variance = variance / countOfDistances;
+
+    cout << "Mean: " << mean << endl;
+    // cout << "Variance: " << variance << endl; variance behaves weirdly, so it's commented out
    
-    //using the median as threshold, classify resources as clusters
-    vector<vector<position> > resourceClusters;
-    set<int> visitedResources;
+    //using the mean as threshold, classify resources as clusters
+    set<int> addedResources;
     
     for (int i = 0; i < distances.size(); i++) {
+        if (addedResources.find(i) != addedResources.end()) {
+            continue;
+        }
         vector<position> cluster;
         cluster.push_back(getResources()[i]);
-        visitedResources.insert(i);
-        for (int j = i+1; j < distances[i].size(); j++) {
-            if (visitedResources.find(j) != visitedResources.end()) {
+        addedResources.insert(i);
+        for (int j = 0; j < distances[i].size(); j++) {
+            int realIndexJ = j + i + 1;
+            if (addedResources.find(realIndexJ) != addedResources.end()) {
                 continue;
             }
-            if (distances[i][j] <= median) {
-                cluster.push_back(getResources()[j]);
+            if (distances[i][j] != -1 && distances[i][j] <= mean) {
+                cluster.push_back(getResources()[realIndexJ]);
+                addedResources.insert(realIndexJ);
             }
         }
-        resourceClusters.push_back(cluster);
+        this->resourceClusters.push_back(cluster);
     }
 
-    return resourceClusters;
+    cout << "Resource clusters: " << this->resourceClusters.size() << endl;
 }

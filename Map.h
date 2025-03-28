@@ -12,16 +12,18 @@ class Map {
     vector<vector<int> > positions;
     vector<position> borderPositions;
     vector<position> resourcesPositions;
+    vector<vector<position> > resourceClusters;
     int totalRows;
     int totalColumns;
     int totalResources;
     bool inRange(position);
-    vector<vector<position> > getResourceClusters();
+    void getResourceClusters();
 
     public:
     Map(ifstream &);
     ~Map();
     bool isBorder(int i, int j);
+    bool isUnbuildable(position p) {return positions[p.first][p.second] == 0;}
     int borders() {return borderPositions.size();}
     position getBorderAt(int i) {return borderPositions[i];}
     vector<position> getBorders() {return borderPositions;}
