@@ -16,9 +16,7 @@ Graph::Graph(Map &m)
         {
             int value = m.at(i, j);
             if (isResource(value) || isWalkable(value))
-            {
-                if (isResource(value)) resources.insert(totalNodes);
-                
+            {                
                 position p =  make_pair(i, j);
                 nodeToMapIndex.push_back(p); 
                 totalNodes++;
@@ -130,35 +128,23 @@ void Graph::filterPathConnectedComponents(solution s, vector<vector<int> > &conn
     
 }
 
-vector<double> Graph::getInfoOfCutsMadeBy(solution &s)
+vector<vector<position> > Graph::getMapConnectedComponents(solution &s)
 {
     makeCuts(s);
     vector<vector<int> > connectedComponents = getConnectedComponents();
     filterPathConnectedComponents(s, connectedComponents);
 
-    double meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
-    double countOfCC = connectedComponents.size();
+    vector<vector<position> > result;
     for (auto cc : connectedComponents) {
-        meanArea += (double)cc.size();
-        double cantResources = 0;
+        vector<position> ccOfMap;
         for (int c : cc) {
-            if (resources.find(c) != resources.end()) cantResources++;
+            ccOfMap.push_back(nodeToMapIndex[c]);
         }
-        if (highestResourcesOnSameCC < cantResources) highestResourcesOnSameCC = cantResources;
-        if (cantResources == 0) ccWithoutResources++;
-        
-    }
-    meanArea = meanArea / countOfCC;
-
-    double leastSquaresArea = 0;
-    for (auto cc : connectedComponents)
-    {
-        leastSquaresArea += pow(meanArea-cc.size(), 2.0);
+        result.push_back(ccOfMap); 
     }
 
     undoCuts(s);
-    //resto los cortes del conteo de componentes conexas
-    return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources, countOfCC};
+    return result;
 }
 
 vector<vector<int> > Graph::getConnectedComponents()

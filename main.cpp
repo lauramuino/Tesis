@@ -11,7 +11,7 @@ string getOutputFilename(string inputFilePath, int maxIterations, int tabuListSi
 {
     string mapName = inputFilePath.substr(inputFilePath.find_last_of("/"), inputFilePath.size() -1);
     string path = std::filesystem::current_path().string() + "/output" + mapName;
-    string fileName = path + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution";
+    string fileName = path + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution"; //TODO: check this logic for a sec, later
     return fileName;
 }
 

@@ -11,7 +11,6 @@ class Graph {
     int totalNodes;
     vector<vector<int> > adjacencyList;
     vector<position> nodeToMapIndex; //indexes are node numbers, elements are map positions
-    set<int> resources;
     vector<pair<int, int> > removedCuts;
     void makeCuts(solution &s);
     void undoCuts(solution &s);
@@ -25,5 +24,5 @@ class Graph {
     ~Graph();
     bool isResource(int v){return v == 2;}
     bool isWalkable(int v){return v == 1;}
-    vector<double> getInfoOfCutsMadeBy(solution &s);
+    vector<vector<position> > getMapConnectedComponents(solution &s);
 };

@@ -40,7 +40,7 @@ Map::Map(ifstream & f)
     }
 
     //se calculan los clusters de recursos dentro del mapa
-    getResourceClusters();
+    computeResourceClusters();
 }
 
 Map::~Map() = default;
@@ -132,7 +132,7 @@ void Map::drawSolution(vector<path> &s, const char* filename)
     print(this->positions, this->resourceClusters, s, filename);
 }
 
-void Map::getResourceClusters() {
+void Map::computeResourceClusters() {
     vector<vector<int> > distances;
     int mean = 0;
     int countOfDistances = 0;

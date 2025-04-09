@@ -9,6 +9,7 @@ TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string ini
 
 void TabuSearch::writeSolution(solution& s)
 {
+    cout << "Best solution found: " << endl;
     for (auto path: s)
     {
         for (auto position: path)
@@ -44,7 +45,7 @@ vector<path> TabuSearch::cortesQueNoEstanEn(solution &s)
         for (int j = 0; j < mapa.borders(); j++)
         {
             path nuevoCorte = mapa.getPathBetween(mapa.getBorderAt(i), mapa.getBorderAt(j));
-            if (!corteEstaEnSolucion(nuevoCorte, s))
+            if (nuevoCorte.size() != 0 && !corteEstaEnSolucion(nuevoCorte, s))
             {
                 cortes.push_back(nuevoCorte);
             }      
@@ -66,38 +67,23 @@ bool TabuSearch::caminosQueSeCruzan(path a, path b)
     {
         for (int j = 0; j < b.size(); j++)
         {
+            // share same position
             if (a[i] == b[j] ) {
                 return true;
             }
-            if (positionsTouch(a[i], b[j]) && i+1<a.size() && j+1<b.size() && positionsTouch(a[i+1], b[j+1]))
+            if (positionsTouch(a[i], b[j]) && i+1<a.size() && j+1<b.size() && positionsTouch(a[i+1], b[j+1])) //TODO: not so sure about this, check later
             {
                 return true;
             }
-            
         } 
     }
     return false;
 }
 
-bool TabuSearch::hayPosicionesNoCaminables(path &cut)
-{
-    for (int i = 0; i < cut.size(); i++)
-    {
-        if (mapa.at(cut[i].first, cut[i].second) == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool TabuSearch::hayCrucesOPosicionesNoCaminables(solution &s)
+bool TabuSearch::hayCruces(solution &s)
 {
     for (int i = 0; i < s.size(); i++)
     {
-        if (hayPosicionesNoCaminables(s[i]))
-            return true;
-
         for (int j = i+1; j < s.size(); j++)
         {
             if (caminosQueSeCruzan(s[i], s[j]))
@@ -120,13 +106,13 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
             //interchanging cuts
             solution newSolution = s; 
             newSolution[j] = cortes[i];
-            if (!hayCrucesOPosicionesNoCaminables(newSolution))
+            if (esSolucionValida(newSolution))
                 neighbours.push_back(newSolution);
             
             //reducing cuts
             solution newSolution2 = s;
             newSolution2.erase(newSolution2.begin() + j);
-            if (!hayCrucesOPosicionesNoCaminables(newSolution2))
+            if (esSolucionValida(newSolution2))
                 neighbours.push_back(newSolution2);
         }
         
@@ -144,7 +130,7 @@ double TabuSearch::objectiveFunction(solution &s)
     }
     averageCutSizes = averageCutSizes / s.size();
     
-    vector<double> info = grafo.getInfoOfCutsMadeBy(s);
+    vector<double> info = this->getInfoOfCutsMadeBy(s);
     double leastSquaresArea = info[0];
     double highestResourcesOnSameCC = info[1];
     double ccWithoutResources = info[2];
@@ -154,16 +140,53 @@ double TabuSearch::objectiveFunction(solution &s)
     return leastSquaresArea + resourcesBalanced + averageCutSizes;
 }
 
-bool TabuSearch::esSolucionParcialValida(solution &s)
+vector<double> TabuSearch::getInfoOfCutsMadeBy(solution& s){
+    vector<vector<position> > connectedComponents = this->grafo.getMapConnectedComponents(s);
+    vector<vector<position> > resourceClusters = this->mapa.getResourceClusters();
+
+    double meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
+
+    for (vector<position> cc : connectedComponents) {
+        meanArea += (double)cc.size();
+        int countOfClusterResources = 0;
+        
+        //check if connected component contains a particular resource cluster
+        for (vector<position> resourceCluster : resourceClusters) {
+            int counter = 0;
+            for (position resource : resourceCluster) {
+                if (find(cc.begin(), cc.end(), resource) != cc.end()) {
+                    counter++;
+                }
+            }
+            if (counter == resourceCluster.size()) {
+                countOfClusterResources++;
+            }
+        }   
+
+        if (highestResourcesOnSameCC < countOfClusterResources) highestResourcesOnSameCC = countOfClusterResources;
+        if (countOfClusterResources == 0) ccWithoutResources++;
+        
+    }
+    meanArea = meanArea / connectedComponents.size();
+
+    double leastSquaresArea = 0;
+    for (auto cc : connectedComponents)
+    {
+        leastSquaresArea += pow(meanArea-cc.size(), 2.0);
+    }
+
+    return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources};
+}
+
+bool TabuSearch::esSolucionValida(solution &s)
 {
-    if (hayCrucesOPosicionesNoCaminables(s))
+    if (hayCruces(s))
         return false;
     
-    vector<double> info = grafo.getInfoOfCutsMadeBy(s);
+    vector<double> info = this->getInfoOfCutsMadeBy(s);
     double ccWithoutResources = info[2];
-    double countOfCC = info[3];
 
-    if (ccWithoutResources > 0)
+    if (ccWithoutResources > 0) //ojo solucion parcial, ok, solucion posta tiene que ser 1
         return false;
 
     return true;
@@ -205,8 +228,8 @@ void TabuSearch::backtracking(solution &s, vector<path> &cuts, int cutsNeeded)
     for (int i = 0; i < cuts.size(); i++)
     {
         s.push_back(cuts[i]);
-        if (esSolucionParcialValida(s))
-        { 
+        if (esSolucionValida(s))
+        {
             cuts.erase(cuts.begin() + i);
             backtracking(s, cuts, cutsNeeded);
             if (cutsNeeded == s.size()) { 
@@ -228,24 +251,27 @@ solution TabuSearch::getInitialSolutionDoingBacktracking()
 {
     solution s;
     vector<path> cuts = cortesQueNoEstanEn(s);
-    backtracking(s, cuts, mapa.resources()-1);
+    backtracking(s, cuts, mapa.resourceClustersCount()-1);
     return s;
 }
 
-solution TabuSearch::getInitialSolution(string initialSolPath)
+solution TabuSearch::getInitialSolution()
 {
     solution bestSolution;
     string path = std::filesystem::current_path().string().c_str();
     
-    if (initialSolPath.empty())
+    if (this->initialSolPath.empty())
     {
+        cout << "Building Initial solution by backtracking..." << endl;
         bestSolution = getInitialSolutionDoingBacktracking();
         path.append("/output/initialSolutionBacktracking");
     } else {
-        bestSolution = getInitialSolutionFromFile(initialSolPath.c_str());
+        cout << "Building Initial solution from file..." << endl;
+        bestSolution = getInitialSolutionFromFile(this->initialSolPath.c_str());
         path.append("/output/initialSolutionManual");
     }
 
+    cout << "Initial solution: " << endl;
     mapa.drawSolution(bestSolution, path.substr(0, path.size()).c_str());
 
     return bestSolution;
@@ -253,7 +279,7 @@ solution TabuSearch::getInitialSolution(string initialSolPath)
 
 solution TabuSearch::run()
 {
-    solution bestSolution = getInitialSolution(initialSolPath);
+    solution bestSolution = getInitialSolution();
 
     solution currentSolution = bestSolution;
     vector<solution> tabu_list;
@@ -290,8 +316,7 @@ solution TabuSearch::run()
             bestSolution = best_neighbour;
         }
     }
- 
-    cout << "Best solution found: " << endl;
+  
     writeSolution(bestSolution);
     return bestSolution;
 }

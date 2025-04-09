@@ -17,13 +17,15 @@ class Map {
     int totalColumns;
     int totalResources;
     bool inRange(position);
-    void getResourceClusters();
 
     public:
     Map(ifstream &);
     ~Map();
     bool isBorder(int i, int j);
     bool isUnbuildable(position p) {return positions[p.first][p.second] == 0;}
+    int resourceClustersCount() {return resourceClusters.size();}
+    vector<vector<position> > getResourceClusters() {return resourceClusters;}
+    void computeResourceClusters();
     int borders() {return borderPositions.size();}
     position getBorderAt(int i) {return borderPositions[i];}
     vector<position> getBorders() {return borderPositions;}
