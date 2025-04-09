@@ -139,6 +139,12 @@ int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resourceC
             drawLine(output, init.second*cellSize + cellSize/2, init.first*cellSize + cellSize/2,
                  end.second*cellSize + cellSize/2, end.first*cellSize + cellSize/2, 255, 0, 0);
         }
+        if (sol[i].size() == 1)
+        {
+            pair<int,int> init = sol[i][0];
+            drawLine(output, init.second*cellSize + cellSize/4, init.first*cellSize + cellSize/2,
+                     init.second*cellSize + 3*cellSize/4 , init.first*cellSize + cellSize/2, 255, 0, 0);
+        }        
     }
 
     // Save the image as a PPM file
