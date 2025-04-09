@@ -140,7 +140,8 @@ double TabuSearch::objectiveFunction(solution &s)
     return leastSquaresArea + resourcesBalanced + averageCutSizes;
 }
 
-vector<double> TabuSearch::getInfoOfCutsMadeBy(solution& s){
+vector<double> TabuSearch::getInfoOfCutsMadeBy(solution& s)
+{
     vector<vector<position> > connectedComponents = this->grafo.getMapConnectedComponents(s);
     vector<vector<position> > resourceClusters = this->mapa.getResourceClusters();
 
@@ -185,8 +186,30 @@ bool TabuSearch::esSolucionValida(solution &s)
     
     vector<double> info = this->getInfoOfCutsMadeBy(s);
     double ccWithoutResources = info[2];
+    double highestResourcesOnSameCC = info[1];
 
-    if (ccWithoutResources > 0) //ojo solucion parcial, ok, solucion posta tiene que ser 1
+    if (ccWithoutResources > 0)
+        return false;
+    
+    if (highestResourcesOnSameCC != 1)
+        return false;
+    
+    return true;
+}
+
+bool TabuSearch::esSolucionParcialValida(solution &s, int resources)
+{
+    if (hayCruces(s))
+        return false;
+    
+    vector<double> info = this->getInfoOfCutsMadeBy(s);
+    double ccWithoutResources = info[2];
+    double highestResourcesOnSameCC = info[1];
+
+    if (ccWithoutResources > 0)
+        return false;
+    
+    if (highestResourcesOnSameCC > resources-s.size())
         return false;
 
     return true;
@@ -272,6 +295,7 @@ solution TabuSearch::getInitialSolution()
     }
 
     cout << "Initial solution: " << endl;
+    writeSolution(bestSolution);
     mapa.drawSolution(bestSolution, path.substr(0, path.size()).c_str());
 
     return bestSolution;

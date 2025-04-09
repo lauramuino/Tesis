@@ -17,6 +17,7 @@ class TabuSearch {
         solution getInitialSolutionFromFile(const char* filename);
         vector<solution> getNeighbourhood(solution &s);
         bool esSolucionValida(solution &s);
+        bool esSolucionParcialValida(solution &s, int resources);
         vector<path> cortesQueNoEstanEn(solution &s);
         bool corteEstaEnSolucion(path &cutA, solution &solucion);
         bool positionsTouch(position a, position b);
