@@ -40,9 +40,10 @@ bool TabuSearch::corteEstaEnSolucion(path &cutA, solution &solucion)
 vector<path> TabuSearch::cortesQueNoEstanEn(solution &s) 
 {
     vector<path> cortes;
+    cout << "Borders: " << mapa.borders() << endl;
     for (int i = 0; i < mapa.borders(); i++)
     {
-        for (int j = 0; j < mapa.borders(); j++)
+        for (int j = 0; j < mapa.borders() && i != j; j++)
         {
             path nuevoCorte = mapa.getPathBetween(mapa.getBorderAt(i), mapa.getBorderAt(j));
             if (nuevoCorte.size() != 0 && !corteEstaEnSolucion(nuevoCorte, s))
@@ -51,6 +52,7 @@ vector<path> TabuSearch::cortesQueNoEstanEn(solution &s)
             }      
         }
     }
+    cout << "Cuts: " << cortes.size() << endl;
     return cortes;
 }
 
