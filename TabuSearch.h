@@ -2,10 +2,11 @@
 
 class TabuSearch {
     public:
-        TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath);
+        TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold);
         solution run();
     private:
         int maxIterations, tabuListSize;
+        double cutsThreshold, lengthsThreshold;
         Map &mapa;
         Graph grafo;
         string initialSolPath;

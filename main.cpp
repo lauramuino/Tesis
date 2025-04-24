@@ -7,23 +7,46 @@
 
 using namespace std;
 
-string getOutputFilename(string inputFilePath, int maxIterations, int tabuListSize)
+string floatNumberToString(double number)
+{
+    string str = to_string(number);
+    str.erase(str.find_last_not_of('0') + 1, string::npos);
+    if (str.back() == '.') {
+        str.pop_back();
+    }
+    return str;
+}
+
+string getOutputFilename(string inputFilePath, int maxIterations, int tabuListSize, double cutsThreshold, double lengthsThreshold)
 {
     string mapName = inputFilePath.substr(inputFilePath.find_last_of("/"), inputFilePath.size() -1);
-    string path = std::filesystem::current_path().string() + "/output" + mapName;
-    string fileName = path + "_it" + to_string(maxIterations) + "_size" + to_string(tabuListSize) + "_solution"; //TODO: check this logic for a sec, later
-    return fileName;
+
+    string fileName = mapName + "_it" + to_string(maxIterations) + "_tabuListSize" + to_string(tabuListSize);
+    fileName = fileName + "_cutsTh" + floatNumberToString(cutsThreshold) + "_lengthsTh" + floatNumberToString(lengthsThreshold);
+    fileName = fileName + "_solution";
+
+    string path = std::filesystem::current_path().string() + "/output";
+
+    return path + fileName;
+}
+
+void printHelp()
+{
+    cout << "ERROR: MISSING PARAMETERS" << endl << endl;
+    cout << "Expected arguments are:" << endl;
+    cout << "   <map>:      path of input map"<< endl;
+    cout << "   <maxIter>:  maximum iterations for Tabu Search"<< endl;
+    cout << "   <listSize>: size of Tabu Search's list"<< endl;
+
+    cout << "   (optional) <cutsThreshold>: threshold for cuts, default is 0.3" << endl;
+    cout << "   (optional) <lengthsThreshold>: threshold for lengths, default is 1" << endl;
+    cout << "   (optional) <inputFile>: path of starting solution, otherwise backtracking will be used" << endl;
 }
 
 int main(int argc, char* argv[]) {
 
     if (argc < 4) {
-        cout << "Missing parameters. The arguments are:" << endl;
-        cout << "<map>: path of input map"<< endl;
-        cout << "<maxIter>: maximum iterations for Tabu Search"<< endl;
-        cout << "<listSize>: size of Tabu Search's list"<< endl;
-
-        cout << "(optional) <inputFile>: path of starting solution, otherwise backtracking will be used" << endl;
+        printHelp();
         return EXIT_FAILURE;
     }
     
@@ -35,12 +58,21 @@ int main(int argc, char* argv[]) {
 
         int maxIterations = atoi(argv[2]);
         int tabuListSize = atoi(argv[3]);
-        string initialSolPath = (argc == 5) ? argv[4] : "";
 
-        try
-        {
-            solution bestSolution = TabuSearch(maxIterations, tabuListSize, mapa, initialSolPath).run();
-            auto outputFilename = getOutputFilename(argv[1], maxIterations, tabuListSize);
+        double cutsThreshold, lengthsThreshold;
+        if (argc == 6) {
+            cutsThreshold = atof(argv[4]);
+            lengthsThreshold = atof(argv[5]);
+        } else {
+            cutsThreshold = 0.3;
+            lengthsThreshold = 1;
+        }
+        
+        string initialSolPath = (argc == 7) ? argv[6] : "";
+
+        try {
+            solution bestSolution = TabuSearch(maxIterations, tabuListSize, mapa, initialSolPath, cutsThreshold, lengthsThreshold).run();
+            auto outputFilename = getOutputFilename(argv[1], maxIterations, tabuListSize, cutsThreshold, lengthsThreshold);
             mapa.drawSolution(bestSolution, outputFilename.c_str());
         }
         catch(const std::exception& e)

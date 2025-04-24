@@ -5,7 +5,7 @@
 #include <filesystem>
 #include "TabuSearch.h"
 
-TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)) {}
+TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)), cutsThreshold(cutsThreshold), lengthsThreshold(lengthsThreshold) {}
 
 void TabuSearch::writeSolution(solution& s)
 {
@@ -40,7 +40,7 @@ bool TabuSearch::corteEstaEnSolucion(path &cutA, solution &solucion)
 vector<path> TabuSearch::cortesQueNoEstanEn(solution &s) 
 {
     vector<path> cortes;
-    cout << "Borders: " << mapa.borders() << endl;
+
     for (int i = 0; i < mapa.borders(); i++)
     {
         for (int j = i+1; j < mapa.borders(); j++)
@@ -52,7 +52,7 @@ vector<path> TabuSearch::cortesQueNoEstanEn(solution &s)
             }      
         }
     }
-    cout << "Cuts: " << cortes.size() << endl;
+
     return cortes;
 }
 
@@ -125,12 +125,12 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
 
 double TabuSearch::objectiveFunction(solution &s)
 {
-    double averageCutSizes = 0;
+    double longitudes = 0;
     for (path p : s)
     {
-        averageCutSizes += (double) p.size();
+        longitudes += (double) p.size();
     }
-    averageCutSizes = averageCutSizes / s.size();
+    double cutsAndLengthsBalance = s.size() * cutsThreshold + longitudes * lengthsThreshold;
     
     vector<double> info = this->getInfoOfCutsMadeBy(s);
     double leastSquaresArea = info[0];
@@ -139,7 +139,7 @@ double TabuSearch::objectiveFunction(solution &s)
 
     double resourcesBalanced = highestResourcesOnSameCC - 1 + ccWithoutResources;
 
-    return leastSquaresArea + resourcesBalanced + averageCutSizes;
+    return leastSquaresArea + resourcesBalanced + cutsAndLengthsBalance;
 }
 
 vector<double> TabuSearch::getInfoOfCutsMadeBy(solution& s)
