@@ -231,15 +231,9 @@ solution TabuSearch::getInitialSolutionFromFile(const char* filename)
     file >> n;
     for (int i = 0; i < n; i++)
     {
-        int m;
-        file >> m;
-        path cut;
-        for (int j = 0; j < m; j++)
-        {
-            int x, y;
-            file >> x >> y;
-            cut.push_back(make_pair(x, y));
-        }
+        int x1, y1, x2, y2;
+        file >> x1 >> y1 >> x2 >> y2;
+        path cut = mapa.getPathBetween(make_pair(x1, y1), make_pair(x2, y2));
         s.push_back(cut);
     }
     return s;  
@@ -250,17 +244,16 @@ void TabuSearch::backtracking(solution &s, vector<path> &cuts, int cutsNeeded)
     if (cutsNeeded == s.size()) {
         return;
     }
-    for (int i = 0; i < cuts.size(); i++)
+    while ( cuts.size() != 0)
     {
-        s.push_back(cuts[i]);
-        if (esSolucionValida(s))
+        s.push_back(cuts[0]);
+        cuts.erase(cuts.begin());
+        if (esSolucionParcialValida(s, cutsNeeded+1))
         {
-            cuts.erase(cuts.begin() + i);
             backtracking(s, cuts, cutsNeeded);
             if (cutsNeeded == s.size()) { 
                 return;
             }
-            cuts.insert(cuts.begin() + i, s.back());
         } else {
             s.pop_back();
         }
