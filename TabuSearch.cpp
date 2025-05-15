@@ -9,7 +9,6 @@ TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string ini
 
 void TabuSearch::writeSolution(solution& s)
 {
-    cout << "Best solution found: " << endl;
     for (auto path: s)
     {
         for (auto position: path)
@@ -336,6 +335,7 @@ solution TabuSearch::run()
         }
     }
   
+    cout << "Best solution found: " << endl;
     writeSolution(bestSolution);
     return bestSolution;
 }
