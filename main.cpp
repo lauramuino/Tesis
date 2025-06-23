@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <utility>
 #include "TabuSearch.h"
 #include <cstring>
@@ -67,11 +68,13 @@ int main(int argc, char* argv[]) {
             cutsThreshold = 0.3;
             lengthsThreshold = 1;
         }
-        
+
+        int neighbourDistance = 5; //TODO: parameters must be taken from file, too tedious to recompile every time
+
         string initialSolPath = (argc == 7) ? argv[6] : "";
 
         try {
-            solution bestSolution = TabuSearch(maxIterations, tabuListSize, mapa, initialSolPath, cutsThreshold, lengthsThreshold).run();
+            solution bestSolution = TabuSearch(maxIterations, tabuListSize, mapa, initialSolPath, cutsThreshold, lengthsThreshold, neighbourDistance).run();
             auto outputFilename = getOutputFilename(argv[1], maxIterations, tabuListSize, cutsThreshold, lengthsThreshold);
             mapa.drawSolution(bestSolution, outputFilename.c_str());
         }

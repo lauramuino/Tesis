@@ -1,4 +1,7 @@
 #include <set>
+#include <utility>
+#include <fstream>
+#include <iostream>
 #include "Map.h"
 #include "Printing.h"
 

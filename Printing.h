@@ -91,7 +91,7 @@ vector<vector<int>> generateDistinctColors(int n) {
     return colors;
 }
 
-int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resourceClusters, vector<vector<pair<int, int> > >& sol, string fileName) {
+void print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resourceClusters, vector<vector<pair<int, int> > >& sol, string fileName) {
 
     // Image parameters
     const int cellSize = 50; // Size of each square
@@ -158,6 +158,5 @@ int print(vector<vector<int> > &matrix, vector<vector<pair<int,int>>>& resourceC
     }
     outFile.close();
 
-    std::cout << "Image saved as " + fileName + "\n";
-    return 0;
+    std::cout << "Image saved as " + fileName << std::endl;
 }

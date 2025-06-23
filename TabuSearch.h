@@ -2,10 +2,11 @@
 
 class TabuSearch {
     public:
-        TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold);
+        TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold, int neighbourDistance);
         solution run();
     private:
         int maxIterations, tabuListSize;
+        int neighbourDistance;
         double cutsThreshold, lengthsThreshold;
         Map &mapa;
         Graph grafo;
@@ -24,7 +25,7 @@ class TabuSearch {
         bool positionsTouch(position a, position b);
         bool caminosQueSeCruzan(path a, path b);
         void backtracking(solution &s, vector<path> &cuts, int cutsNeeded);
-        void writeSolution(solution& s);
+        void printSolution(solution& s);
         bool hayCruces(solution &s);
 
         vector<double> getInfoOfCutsMadeBy(solution &s);

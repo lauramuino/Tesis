@@ -1,5 +1,10 @@
 #include <algorithm>
+#include <iostream>
+#include <utility>
+#include <set>
+#include <deque>
 #include <cmath>
+#include <stdlib.h>
 #include "Graph.h"
 
 using namespace std;
@@ -16,9 +21,8 @@ Graph::Graph(Map &m)
         {
             int value = m.at(i, j);
             if (isResource(value) || isWalkable(value))
-            {                
-                position p =  make_pair(i, j);
-                nodeToMapIndex.push_back(p); 
+            {
+                nodeToMapIndex[totalNodes] = make_pair(i, j); 
                 totalNodes++;
             }
         }
@@ -27,18 +31,43 @@ Graph::Graph(Map &m)
     //filling with neighbour info
     for (int k = 0; k < totalNodes; k++)
     {
-        vector<int> aux;
+        vector<int> indexNeighbours;
         vector<position> neighbours = m.getWalkableNeighbours(nodeToMapIndex[k]);
         for (position neighbour : neighbours)
         {
-            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), neighbour);
-            if (it != std::end(nodeToMapIndex)) {
-               int index = it - nodeToMapIndex.begin();
-                aux.push_back(index);
+            for (auto it = nodeToMapIndex.begin(); it != nodeToMapIndex.end(); ++it) {
+                if (it->second == neighbour) {
+                    indexNeighbours.push_back(it->first); //push index
+                }
             }
         }
-        adjacencyList.push_back(aux);
+        adjacencyList[k] = indexNeighbours;
     }
+
+    //there may be some isolated nodes that must be remove
+    vector<vector<int> > connectedComponents = getConnectedComponents();
+    for (auto cc : connectedComponents) {
+        //find if there are non border elements
+        int counter = 0;
+        for (auto node: cc) {
+            position p = nodeToMapIndex[node];
+            if (m.isBorder(p.first, p.second)) {
+                counter++;
+            } else {
+                break;
+            }
+        }
+
+        //if there aren't, delete cc from graph
+        if (counter == cc.size()) {
+            for (auto node: cc) {
+                totalNodes--;
+                nodeToMapIndex.erase(node);
+                adjacencyList.erase(node);
+            }
+        }
+    }
+    vector<vector<int> > connectedComponentss = getConnectedComponents();
 }
 
 void Graph::removeEdge(int a, int b)
@@ -57,15 +86,16 @@ void Graph::removeEdge(int a, int b)
 
 void Graph::removeAllEdges(position p)
 {
-    auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), p);
-    if (it!=nodeToMapIndex.end())
+    for (auto it = nodeToMapIndex.begin(); it != nodeToMapIndex.end(); ++it)
     {
-        int index = it - nodeToMapIndex.begin();
-        vector<int> aux = adjacencyList[index];
-        for (int neighbour : aux)
-        {
-            removeEdge(index, neighbour);
-            removedCuts.push_back(make_pair(index, neighbour));
+        if (it->second == p) {
+            int index = it->first;
+            vector<int> aux = adjacencyList[index];
+            for (int neighbour : aux)
+            {
+                removeEdge(index, neighbour);
+                removedCuts.push_back(make_pair(index, neighbour));
+            }
         }
     }
 }
@@ -93,39 +123,23 @@ void Graph::undoCuts(solution &s)
     removedCuts.clear();
 }
 
-void Graph::filterPathConnectedComponents(solution s, vector<vector<int> > &connectsdComponents)
-{
-    vector<int> ccToDelete;
-    //recorro todos los caminos
-    for (auto is = s.begin(); is != s.end(); is++)
-    {
-        path p = *is;
-        //para cada camino, recorro sus posiciones (del map)
-        for (auto ip = p.begin(); ip != p.end(); ip++)
-        {
-            position pos = *ip;
-            auto it = find(nodeToMapIndex.begin(), nodeToMapIndex.end(), pos);
-            //obtain index of position in the nodeToMapIndex array
-            int nodeNumber = it - nodeToMapIndex.begin();
-            ccToDelete.push_back(nodeNumber);
-        }
+void Graph::filterPathConnectedComponents(solution &s, vector<vector<int> > &connectedComponents) {
+    // count total positions in s
+    int ccToDelete = 0;
+    for (path camino : s) {
+        ccToDelete += camino.size();
     }
 
-    //foreach element of ccTodelete, find its aparition in conectsdComponents and delete it
-    for (int nodeNumber : ccToDelete)
-    {
-        for (auto it = connectsdComponents.begin(); it != connectsdComponents.end(); it++)
-        {
-            vector<int> cc = *it;
-            auto it2 = find(cc.begin(), cc.end(), nodeNumber);
-            if (it2 != cc.end())
-            {
-                connectsdComponents.erase(it);
-                break;
-            }
+    // delete as much cc's with one element as total positions in s
+    auto it = connectedComponents.begin();
+    while (ccToDelete > 0 && it != connectedComponents.end()) {
+        if ((*it).size() == 1) {
+            connectedComponents.erase(it);
+            ccToDelete--;
+        } else {
+            it++;
         }
     }
-    
 }
 
 vector<vector<position> > Graph::getMapConnectedComponents(solution &s)
@@ -152,14 +166,14 @@ vector<vector<int> > Graph::getConnectedComponents()
     set<int> visited;
     vector<vector<int> > connectedComponents;
 
-   for (int v = 0; v < totalNodes; v++) {
-        bool notVisited = visited.find(v) == visited.end();
+    for (auto it = adjacencyList.begin(); it != adjacencyList.end(); ++it) {
+        int node = it->first;
+        bool notVisited = visited.find(node) == visited.end();
 
         if (notVisited) {
             vector<int> cc;
             deque<int> toVisit;
-            toVisit.push_front(v);
-
+            toVisit.push_front(node);
             while(!toVisit.empty()) {
                 int actual = toVisit.back();
                 toVisit.pop_back();

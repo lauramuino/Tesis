@@ -1,13 +1,14 @@
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <numeric>
 #include <filesystem>
 #include "TabuSearch.h"
 
-TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)), cutsThreshold(cutsThreshold), lengthsThreshold(lengthsThreshold) {}
+TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold, int neighbourDistance) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)), cutsThreshold(cutsThreshold), lengthsThreshold(lengthsThreshold), neighbourDistance(neighbourDistance) {}
 
-void TabuSearch::writeSolution(solution& s)
+void TabuSearch::printSolution(solution& s)
 {
     for (auto path: s)
     {
@@ -95,7 +96,8 @@ bool TabuSearch::hayCruces(solution &s)
     return false;
 }
 
-vector<solution> TabuSearch::getNeighbourhood(solution &s)
+//obtencion de vecindario completo, por ahora lo dejo comentado porque genera muchos elementos 
+/*vector<solution> TabuSearch::getNeighbourhood(solution &s)
 { 
     vector<solution> neighbours;
     vector<path> cortes = cortesQueNoEstanEn(s);
@@ -120,6 +122,62 @@ vector<solution> TabuSearch::getNeighbourhood(solution &s)
     }
     
     return neighbours;
+}*/
+
+vector<solution> TabuSearch::getNeighbourhood(solution &solucion)
+{
+    vector<solution> neighbourhood;
+    for (int k = 0; k < solucion.size(); k++) {
+        position extremo_a = solucion[k][0];
+        position extremo_b = solucion[k][solucion[k].size()-1];
+        
+        //busco alrededor de los bordes, un cuadrado de distancia neighbourDistance, por bordes
+        vector<position> losDeA;
+        for (int i = extremo_a.first - neighbourDistance; i <= extremo_a.first + neighbourDistance; i++) {
+            for (int j = extremo_a.second - neighbourDistance; j <= extremo_a.second + neighbourDistance; j++) {
+                if (i >= 0 and i < this->mapa.rows() and j >= 0 and j < this->mapa.columns()) {//chequeo no irme de rango
+                    if (max(abs(i - extremo_a.first), abs(j - extremo_a.second)) == neighbourDistance) { //chequeo distancia
+                        if (this->mapa.isBorder(i,j)) { //chequeo q sea borde
+                            losDeA.push_back(make_pair(i,j));
+                        }
+                    }
+                }
+            }
+        }
+
+        vector<position> losDeB;
+        for (int i = extremo_b.first - neighbourDistance; i <= extremo_b.first + neighbourDistance; i++) {
+            for (int j = extremo_b.second - neighbourDistance; j <= extremo_b.second + neighbourDistance; j++) {
+                if (i >= 0 and i < this->mapa.rows() and j >= 0 and j < this->mapa.columns()) {//chequeo no irme de rango
+                    if (max(abs(i - extremo_b.first), abs(j - extremo_b.second)) == neighbourDistance) { //chequeo distancia
+                        if (this->mapa.isBorder(i,j)) { //chequeo q sea borde
+                            losDeB.push_back(make_pair(i,j));
+                        }
+                    }
+                }
+            }
+        }
+
+        //combinar los puntos bordes encontrados para formar cortes
+        for (int i = 0; i < losDeA.size(); i++) { //todo: change to foreach
+            for (int j = 0; j < losDeB.size(); j++) {
+                if (losDeA[i] == make_pair(24, 42) && j == 0) {
+                    path p = this->mapa.getPathBetween(losDeA[i], losDeB[j]);
+                    //interchanging cuts
+                    solution newSolution = solucion; 
+                    newSolution[k] = p;
+                    if (esSolucionValida(newSolution)) {
+                        neighbourhood.push_back(newSolution);
+                    }
+                    string path = std::filesystem::current_path().string().c_str();
+                    path = path + "/aChequear";
+                    mapa.drawSolution(newSolution, path.c_str());
+                    return neighbourhood;
+                }
+            }
+        }
+    }
+    return neighbourhood;
 }
 
 double TabuSearch::objectiveFunction(solution &s)
@@ -288,9 +346,9 @@ solution TabuSearch::getInitialSolution()
         path.append("/output/initialSolutionManual");
     }
 
-    cout << "Initial solution: " << endl;
-    writeSolution(bestSolution);
-    mapa.drawSolution(bestSolution, path.substr(0, path.size()).c_str());
+    cout << "Initial solution" << endl;
+    // printSolution(bestSolution);
+    // mapa.drawSolution(bestSolution, path.substr(0, path.size()).c_str());
 
     return bestSolution;
 }
@@ -335,7 +393,7 @@ solution TabuSearch::run()
         }
     }
   
-    cout << "Best solution found: " << endl;
-    writeSolution(bestSolution);
+    cout << "Best solution found" << endl;
+    //printSolution(bestSolution);
     return bestSolution;
 }
