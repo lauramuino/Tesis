@@ -1,5 +1,2 @@
-.idea
-.vs
-.vscode
-*.ppm*
-*.exe
+*.o
+tesis
