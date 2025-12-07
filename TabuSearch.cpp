@@ -296,37 +296,33 @@ solution TabuSearch::getInitialSolutionFromFile(const char* filename)
     return s;  
 }
 
-void TabuSearch::backtracking(solution &s, vector<path> &cuts, int cutsNeeded)
+bool TabuSearch::backtracking(solution &s, const vector<path> &cuts, int cutsNeeded, int startIndex)
 {
-    if (cutsNeeded == s.size()) {
-        return;
+    if (s.size() == cutsNeeded) {
+        return true; 
     }
-    while ( cuts.size() != 0)
-    {
-        s.push_back(cuts[0]);
-        cuts.erase(cuts.begin());
-        if (esSolucionParcialValida(s, cutsNeeded+1))
-        {
-            backtracking(s, cuts, cutsNeeded);
-            if (cutsNeeded == s.size()) { 
-                return;
+
+    for (int i = startIndex; i < cuts.size(); ++i) {
+        
+        s.push_back(cuts[i]);
+
+        if (esSolucionParcialValida(s, cutsNeeded+1)) {
+            if (backtracking(s, cuts, cutsNeeded, i + 1)) {
+                return true; // Found a solution, bubble up true
             }
-        } else {
-            s.pop_back();
         }
+
+        s.pop_back();
     }
-    if (s.size() != cutsNeeded)
-    { 
-        throw std::runtime_error("No se pudo encontrar una solucion inicial");
-    }
-    
+
+    return false;
 }
 
 solution TabuSearch::getInitialSolutionDoingBacktracking()
 {
     solution s;
     vector<path> cuts = cortesQueNoEstanEn(s);
-    backtracking(s, cuts, mapa.resourceClustersCount()-1);
+    backtracking(s, cuts, mapa.resourceClustersCount()-1, 0);
     return s;
 }
 

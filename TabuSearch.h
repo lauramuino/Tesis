@@ -24,7 +24,7 @@ class TabuSearch {
         bool corteEstaEnSolucion(path &cutA, solution &solucion);
         bool positionsTouch(position a, position b);
         bool caminosQueSeCruzan(path a, path b);
-        void backtracking(solution &s, vector<path> &cuts, int cutsNeeded);
+        bool backtracking(solution &s, const vector<path> &cuts, int cutsNeeded, int startIndex);
         void printSolution(solution& s);
         bool hayCruces(solution &s);
 
