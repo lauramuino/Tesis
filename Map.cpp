@@ -153,7 +153,7 @@ void Map::computeResourceClusters() {
         }
         distances.push_back(distances_i);
     }
-    mean = mean / countOfDistances;
+    mean = (countOfDistances != 0) ? (mean / countOfDistances) : 0;
 
     // int variance = 0;
     // for (int i = 0; i < distances.size(); i++) {
