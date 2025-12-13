@@ -256,24 +256,6 @@ bool TabuSearch::esSolucionValida(solution &s)
     return true;
 }
 
-bool TabuSearch::esSolucionParcialValida(solution &s, int resources)
-{
-    if (hayCruces(s))
-        return false;
-    
-    vector<double> info = this->getInfoOfCutsMadeBy(s);
-    double ccWithoutResources = info[2];
-    double highestResourcesOnSameCC = info[1];
-
-    if (ccWithoutResources > 0)
-        return false;
-    
-    if (highestResourcesOnSameCC > resources-s.size())
-        return false;
-
-    return true;
-}
-
 solution TabuSearch::getInitialSolutionFromFile(const char* filename)
 {
     solution s;
@@ -298,15 +280,17 @@ solution TabuSearch::getInitialSolutionFromFile(const char* filename)
 
 bool TabuSearch::backtracking(solution &s, const vector<path> &cuts, int cutsNeeded, int startIndex)
 {
+    cout << "index is " << startIndex << endl;
     if (s.size() == cutsNeeded) {
+        cout << "retured true" << endl;
         return true; 
     }
 
     for (int i = startIndex; i < cuts.size(); ++i) {
-        
+        cout << "i is " << i << endl;
         s.push_back(cuts[i]);
 
-        if (esSolucionParcialValida(s, cutsNeeded+1)) {
+        if (esSolucionValida(s)) {
             if (backtracking(s, cuts, cutsNeeded, i + 1)) {
                 return true; // Found a solution, bubble up true
             }
@@ -322,6 +306,7 @@ solution TabuSearch::getInitialSolutionDoingBacktracking()
 {
     solution s;
     vector<path> cuts = cortesQueNoEstanEn(s);
+    cout << "size of cuts " << cuts.size() << endl;
     backtracking(s, cuts, mapa.resourceClustersCount()-1, 0);
     return s;
 }
