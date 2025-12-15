@@ -1,4 +1,6 @@
-#include "Graph.h"
+#include "Map.h"
+
+typedef vector<path> solution;
 
 class TabuSearch {
     public:
@@ -9,10 +11,12 @@ class TabuSearch {
         int neighbourDistance;
         double cutsThreshold, lengthsThreshold;
         Map &mapa;
-        Graph grafo;
         string initialSolPath;
 
         double objectiveFunction(solution &s);
+
+        bool checkPartitionOptimized(Map &mapa, solution &cuts);
+        vector<double> getPartitionStatsOptimized(solution& s);
         
         solution getInitialSolution();
         solution getInitialSolutionDoingBacktracking();
@@ -26,6 +30,4 @@ class TabuSearch {
         bool backtracking(solution &s, const vector<path> &cuts, int cutsNeeded, int startIndex);
         void printSolution(solution& s);
         bool hayCruces(solution &s);
-
-        vector<double> getInfoOfCutsMadeBy(solution &s);
 };

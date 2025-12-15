@@ -5,8 +5,13 @@
 #include <numeric>
 #include <filesystem>
 #include "TabuSearch.h"
+#include <queue>
 
-TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold, int neighbourDistance) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), grafo(Graph(mapa)), cutsThreshold(cutsThreshold), lengthsThreshold(lengthsThreshold), neighbourDistance(neighbourDistance) {}
+struct Node {
+    int r, c, colorID;
+};
+
+TabuSearch::TabuSearch(int maxIterations, int tabuListSize, Map &map, string initialSolPath, double cutsThreshold, double lengthsThreshold, int neighbourDistance) : maxIterations(maxIterations), tabuListSize(tabuListSize), mapa(map), initialSolPath(initialSolPath), cutsThreshold(cutsThreshold), lengthsThreshold(lengthsThreshold), neighbourDistance(neighbourDistance) {}
 
 void TabuSearch::printSolution(solution& s)
 {
@@ -189,7 +194,7 @@ double TabuSearch::objectiveFunction(solution &s)
     }
     double cutsAndLengthsBalance = s.size() * cutsThreshold + longitudes * lengthsThreshold;
     
-    vector<double> info = this->getInfoOfCutsMadeBy(s);
+    vector<double> info = this->getPartitionStatsOptimized(s);
     double leastSquaresArea = info[0];
     double highestResourcesOnSameCC = info[1];
     double ccWithoutResources = info[2];
@@ -199,43 +204,212 @@ double TabuSearch::objectiveFunction(solution &s)
     return leastSquaresArea + resourcesBalanced + cutsAndLengthsBalance;
 }
 
-vector<double> TabuSearch::getInfoOfCutsMadeBy(solution& s)
+vector<double> TabuSearch::getPartitionStatsOptimized(solution& s)
 {
-    vector<vector<position> > connectedComponents = this->grafo.getMapConnectedComponents(s);
-    vector<vector<position> > resourceClusters = this->mapa.getResourceClusters();
+    int rows = mapa.rows();
+    int cols = mapa.columns();
 
-    double meanArea = 0, highestResourcesOnSameCC = 0, ccWithoutResources = 0;
-
-    for (vector<position> cc : connectedComponents) {
-        meanArea += (double)cc.size();
-        int countOfClusterResources = 0;
-        
-        //check if connected component contains a particular resource cluster
-        for (vector<position> resourceCluster : resourceClusters) {
-            int counter = 0;
-            for (position resource : resourceCluster) {
-                if (find(cc.begin(), cc.end(), resource) != cc.end()) {
-                    counter++;
-                }
-            }
-            if (counter == resourceCluster.size()) {
-                countOfClusterResources++;
-            }
-        }   
-
-        if (highestResourcesOnSameCC < countOfClusterResources) highestResourcesOnSameCC = countOfClusterResources;
-        if (countOfClusterResources == 0) ccWithoutResources++;
-        
+    // 1. Mark cuts on a lookup grid for O(1) access
+    vector<vector<bool>> isCut(rows, vector<bool>(cols, false));
+    for (const path& p : s) {
+        for (const position& pos : p) {
+            isCut[pos.first][pos.second] = true;
+        }
     }
-    meanArea = meanArea / connectedComponents.size();
+
+    // 2. Full Scan BFS to identify all components
+    // componentMap stores the Component ID for each cell (-1 if unvisited/wall)
+    vector<vector<int>> componentMap(rows, vector<int>(cols, -1));
+    vector<int> componentSizes;
+    int compId = 0;
+
+    // Directions for neighbors
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            // If it's a valid starting point (Walkable, Not a Cut, Not Visited)
+            if (!mapa.isUnbuildable(make_pair(i, j)) && !isCut[i][j] && componentMap[i][j] == -1) {
+                
+                // Start BFS for this component
+                int currentSize = 0;
+                queue<pair<int, int>> q;
+                
+                q.push({i, j});
+                componentMap[i][j] = compId;
+                currentSize++;
+
+                while (!q.empty()) {
+                    pair<int, int> curr = q.front();
+                    q.pop();
+
+                    for (int k = 0; k < 4; k++) {
+                        int nr = curr.first + dr[k];
+                        int nc = curr.second + dc[k];
+
+                        // Check Bounds
+                        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+
+                        // Check Walkability and if already visited
+                        if (!mapa.isUnbuildable(make_pair(nr, nc)) && !isCut[nr][nc] && componentMap[nr][nc] == -1) {
+                            componentMap[nr][nc] = compId;
+                            currentSize++;
+                            q.push({nr, nc});
+                        }
+                    }
+                }
+                
+                // Finished one component
+                componentSizes.push_back(currentSize);
+                compId++;
+            }
+        }
+    }
+
+    // 3. Analyze Resource Clusters
+    // We check which component each resource cluster falls into.
+    vector<vector<position>> resourceClusters = mapa.getResourceClusters();
+    vector<int> fullClustersInComp(compId, 0); 
+    vector<bool> compHasAnyResource(compId, false);
+
+    for (const auto& cluster : resourceClusters) {
+        if (cluster.empty()) continue;
+
+        // Check the component ID of the first resource in the cluster
+        position first = cluster[0];
+        
+        // If the resource is covered by a cut, it's considered destroyed/isolated
+        if (isCut[first.first][first.second]) continue;
+
+        int cID = componentMap[first.first][first.second];
+        
+        // If cID is -1, it means it's a wall or unreachable (shouldn't happen for valid resources)
+        if (cID == -1) continue;
+
+        // Verify if the ENTIRE cluster is inside this same component
+        bool isFullCluster = true;
+        for (size_t k = 1; k < cluster.size(); ++k) {
+            position p = cluster[k];
+            // If part of the cluster is cut or in a different component (impossible if connected, but good to check)
+            if (isCut[p.first][p.second] || componentMap[p.first][p.second] != cID) {
+                isFullCluster = false;
+                break;
+            }
+        }
+
+        if (isFullCluster) {
+            fullClustersInComp[cID]++;
+            compHasAnyResource[cID] = true; // Mark that this component has at least one valid cluster
+        }
+    }
+
+    // 4. Calculate Final Metrics
+    double highestResourcesOnSameCC = 0;
+    double ccWithoutResources = 0;
+
+    for (int c = 0; c < compId; ++c) {
+        if (fullClustersInComp[c] > highestResourcesOnSameCC) {
+            highestResourcesOnSameCC = fullClustersInComp[c];
+        }
+        // If the component has NO full clusters, increment empty counter
+        if (!compHasAnyResource[c]) {
+            ccWithoutResources++;
+        }
+    }
+
+    double meanArea = 0;
+    if (!componentSizes.empty()) {
+        double totalArea = 0;
+        for (int s : componentSizes) totalArea += s;
+        meanArea = totalArea / componentSizes.size();
+    }
 
     double leastSquaresArea = 0;
-    for (auto cc : connectedComponents)
-    {
-        leastSquaresArea += pow(meanArea-cc.size(), 2.0);
+    for (int s : componentSizes) {
+        leastSquaresArea += pow(meanArea - s, 2.0);
     }
 
     return {leastSquaresArea, highestResourcesOnSameCC, ccWithoutResources};
+}
+
+bool TabuSearch::checkPartitionOptimized(Map &mapa, solution &cuts) {
+    int rows = mapa.rows();
+    int cols = mapa.columns();
+    
+    // 1. Mark cuts on a fast lookup grid (0: empty, 1: cut)
+    vector<vector<bool>> isCut(rows, vector<bool>(cols, false));
+    for (const path& cut : cuts) {
+        for (const position& p : cut) {
+            isCut[p.first][p.second] = true;
+        }
+    }
+
+    // 2. Initialize visited grid with 0
+    // visited[r][c] stores the ColorID of the resource that reached it
+    vector<vector<int>> visited(rows, vector<int>(cols, 0));
+    queue<Node> q;
+
+    // 3. Get Resource Clusters and initialize BFS
+    // We treat each cluster as a unique "source" with a unique ID (starting at 1)
+    vector<vector<position>> clusters = mapa.getResourceClusters();
+    for (int i = 0; i < clusters.size(); i++) {
+        int colorID = i + 1; 
+        for (const position& p : clusters[i]) {
+            // If a resource is underneath a cut, it's effectively isolated/destroyed
+            if (isCut[p.first][p.second]) continue; 
+            
+            visited[p.first][p.second] = colorID;
+            q.push({p.first, p.second, colorID});
+        }
+    }
+
+    // 4. Multi-Source BFS
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    while (!q.empty()) {
+        Node current = q.front();
+        q.pop();
+
+        for (int i = 0; i < 4; i++) {
+            int nr = current.r + dr[i];
+            int nc = current.c + dc[i];
+
+            // Check boundaries
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+
+            // Check if it's a static wall or a dynamic cut
+            if (mapa.isUnbuildable(make_pair(nr, nc)) || isCut[nr][nc]) continue;
+
+            int neighborColor = visited[nr][nc];
+
+            if (neighborColor == 0) {
+                // Found unvisited cell, claim it
+                visited[nr][nc] = current.colorID;
+                q.push({nr, nc, current.colorID});
+            } else if (neighborColor != current.colorID) {
+                // COLLISION: Two different resource clusters met.
+                // This means the cuts did NOT separate them.
+                return false; 
+            }
+        }
+    }
+
+    // 5. Check for Empty Regions (Orphans)
+    // Any walkable cell that is NOT a cut and has visited == 0 means
+    // it belongs to a region with NO resources.
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (!mapa.isUnbuildable(make_pair(i, j)) && !isCut[i][j]) {
+                if (visited[i][j] == 0) {
+                    return false; // Found region without resources
+                }
+            }
+        }
+    }
+
+    return true; // All checks passed
 }
 
 bool TabuSearch::esSolucionValida(solution &s)
@@ -243,17 +417,7 @@ bool TabuSearch::esSolucionValida(solution &s)
     if (hayCruces(s))
         return false;
     
-    vector<double> info = this->getInfoOfCutsMadeBy(s);
-    double ccWithoutResources = info[2];
-    double highestResourcesOnSameCC = info[1];
-
-    if (ccWithoutResources > 0)
-        return false;
-    
-    if (highestResourcesOnSameCC != 1)
-        return false;
-    
-    return true;
+    return checkPartitionOptimized(this->mapa, s);
 }
 
 solution TabuSearch::getInitialSolutionFromFile(const char* filename)
@@ -280,18 +444,17 @@ solution TabuSearch::getInitialSolutionFromFile(const char* filename)
 
 bool TabuSearch::backtracking(solution &s, const vector<path> &cuts, int cutsNeeded, int startIndex)
 {
-    cout << "index is " << startIndex << endl;
     if (s.size() == cutsNeeded) {
-        cout << "retured true" << endl;
+        cout << "returned true at " << startIndex << endl;
         return true; 
     }
 
     for (int i = startIndex; i < cuts.size(); ++i) {
-        cout << "i is " << i << endl;
         s.push_back(cuts[i]);
 
         if (esSolucionValida(s)) {
             if (backtracking(s, cuts, cutsNeeded, i + 1)) {
+                cout << "returned true at i = " << i << endl;
                 return true; // Found a solution, bubble up true
             }
         }
